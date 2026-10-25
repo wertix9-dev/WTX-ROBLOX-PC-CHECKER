@@ -1,0 +1,11 @@
+﻿# Build outputs and local tooling
+src/**/bin/
+src/**/obj/
+.kilo/
+selftest.txt
+*.log
+*.user
+
+# OS files
+Thumbs.db
+Desktop.ini

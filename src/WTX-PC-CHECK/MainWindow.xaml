@@ -1,0 +1,1069 @@
+﻿<Window x:Class="WtxPcCheck.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="WTX PC CHECK"
+        Width="1280" Height="840" MinWidth="880" MinHeight="460"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="CanResize"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}" FontSize="13"
+        Icon="Assets/AppIcon.ico"
+        Closing="Window_Closing">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border BorderBrush="#26333C" BorderThickness="1" Background="{StaticResource BgBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="58" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#11181D" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <Grid Margin="18,0,10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="Transparent">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="30" Height="30" CornerRadius="7" Background="#16282C" BorderBrush="#275854" BorderThickness="1">
+                                <Path Data="M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z M8,12 L11,15 L16,9" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Margin="7" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="WTX PC CHECK" FontFamily="{StaticResource DisplayFont}" FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Text="Made by WERTIX" Style="{StaticResource SmallText}" FontSize="10.5" Margin="0,-1,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border Style="{StaticResource Badge}" Background="#142326" BorderBrush="#244641" BorderThickness="1" Padding="10,4">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource LimeBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="Local-only scan" Style="{StaticResource SmallText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource WindowButton}" Click="Minimize_Click" ToolTip="Minimize" AutomationProperties.Name="Minimize window" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Path Data="M4,9 H16" Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.5" Width="18" Height="18" Stretch="Uniform" />
+                        </Button>
+                        <Button x:Name="MaximizeButton" Style="{StaticResource WindowButton}" Click="Maximize_Click" ToolTip="Maximize" AutomationProperties.Name="Maximize or restore window" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Path x:Name="MaximizeGlyph" Data="M4,4 H16 V16 H4 Z" Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.5" Width="17" Height="17" Stretch="Uniform" />
+                        </Button>
+                        <Button Style="{StaticResource DangerCloseButton}" Click="Close_Click" ToolTip="Close" AutomationProperties.Name="Close window" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Path Data="M4,4 L16,16 M16,4 L4,16" Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.5" Width="17" Height="17" Stretch="Uniform" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="216" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="#11181D" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="0,0,1,0">
+                    <Grid Margin="14,20,14,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Margin="8,0,8,18">
+                            <TextBlock Text="WORKSPACE" Style="{StaticResource LabelText}" Margin="2,0,0,8" />
+                            <ListBox Style="{StaticResource NavListBox}"
+                                     ItemsSource="{Binding NavigationItems}"
+                                     SelectedValue="{Binding CurrentPageKey, Mode=TwoWay}"
+                                     SelectedValuePath="Key"
+                                     AutomationProperties.Name="Main navigation">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Path Data="{Binding IconData}" Width="17" Height="17" Stretch="Uniform" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Label}" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="13" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Margin="4,0,4,0">
+                            <Border Style="{StaticResource Divider}" Margin="0,0,0,14" />
+                            <Border Background="#142027" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9" Padding="12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4" Stretch="Uniform" Width="16" Height="18" VerticalAlignment="Center" />
+                                        <TextBlock Text="WTX PC CHECK" FontWeight="SemiBold" FontSize="12" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock Text="Made by WERTIX" Style="{StaticResource SmallText}" Margin="0,4,0,0" />
+                                    <TextBlock Text="{Binding VersionText}" Style="{StaticResource SmallText}" Foreground="{StaticResource TextMutedBrush}" Margin="0,1,0,0" />
+                                    <Border Background="#101A1E" CornerRadius="5" Padding="7,4" Margin="0,9,0,0">
+                                        <TextBlock Text="No telemetry · No scan history" Style="{StaticResource SmallText}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="#221F15" BorderBrush="#4A3C1F" BorderThickness="1" CornerRadius="8" Margin="28,14,28,0" Padding="14,10"
+                            Visibility="{Binding HasNotice, Converter={StaticResource BoolToVisibility}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Path Data="M12,3 L21,20 H3 Z M12,9 V14 M12,17 V17.1" Stroke="{StaticResource AmberBrush}" StrokeThickness="1.4" Stretch="Uniform" Width="17" Height="17" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding NoticeText}" Style="{StaticResource SmallText}" Foreground="#E7D6B4" Margin="10,0,10,0" VerticalAlignment="Center" />
+                            <Button Grid.Column="2" Style="{StaticResource GhostButton}" Padding="6" Command="{Binding DismissNoticeCommand}" ToolTip="Dismiss notice" AutomationProperties.Name="Dismiss notice">
+                                <Path Data="M4,4 L12,12 M12,4 L4,12" Stroke="{StaticResource TextMutedBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Grid x:Name="PageHost" Grid.Row="1">
+                        <!-- DASHBOARD -->
+                        <ScrollViewer Style="{StaticResource PageScroll}" Visibility="{Binding IsDashboardPage, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel MaxWidth="1180" HorizontalAlignment="Stretch" Margin="28,24,28,32">
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Dashboard" Style="{StaticResource PageTitle}" />
+                                        <TextBlock Text="{Binding CurrentPageSubtitle}" Style="{StaticResource BodyText}" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Style="{StaticResource Badge}" Background="#152126" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Padding="10,5" VerticalAlignment="Top">
+                                        <TextBlock Text="Windows 10 22H2 · Windows 11 · x64" Style="{StaticResource SmallText}" FontSize="10.5" />
+                                    </Border>
+                                </Grid>
+
+                                <Border CornerRadius="14" BorderThickness="1" BorderBrush="#2B4148" Background="{StaticResource HeroGradient}" Padding="30">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="230" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                                            <TextBlock Text="WERTIX · LOCAL PC CHECK" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBrush}" />
+                                            <TextBlock Text="A clearer look at this PC" FontFamily="{StaticResource DisplayFont}" FontSize="30" FontWeight="SemiBold" Margin="0,8,0,8" TextWrapping="Wrap" />
+                                            <TextBlock Style="{StaticResource BodyText}" MaxWidth="660" HorizontalAlignment="Left"
+                                                       Text="Review selected drives for Roblox executor indicators, Lua script risk signals, and basic Windows security gaps. Every check runs on this PC. Indicators are explained, never presented as proof." />
+                                            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                                <Button Style="{StaticResource PrimaryButton}" Command="{Binding StartScanCommand}" Padding="18,10" Margin="0,0,10,0" AutomationProperties.Name="Start Full PC Scan">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Path Data="M3,3 H21 V21 H3 Z M7,7 H10 V10 H7 Z M14,7 H17 V10 H14 Z M7,14 H10 V17 H7 Z M14,14 H17 V17 H14 Z" Stroke="{StaticResource DarkTextBrush}" StrokeThickness="1.4" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" />
+                                                        <TextBlock Text="Start Full PC Scan" Foreground="{StaticResource DarkTextBrush}" FontWeight="SemiBold" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource SecondaryButton}" Command="{Binding NavigateScanCommand}" Content="Change scope" />
+                                            </StackPanel>
+                                            <WrapPanel Margin="0,16,0,0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,7,0" />
+                                                    <TextBlock Text="{Binding SelectedScopeSummary}" Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Text="A confirmation appears before every scan." Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                            </WrapPanel>
+                                        </StackPanel>
+
+                                        <Grid Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="200" Height="200">
+                                            <Ellipse Width="184" Height="184" Stroke="#2B4650" StrokeThickness="1" />
+                                            <Ellipse Width="150" Height="150" Stroke="#2F6B66" StrokeThickness="1" StrokeDashArray="4 6" />
+                                            <Path Data="M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4" Stretch="Uniform" Width="104" Height="126" Opacity="0.85" />
+                                            <Path Data="M7,12 L10.5,15.5 L17,8.5" Stroke="{StaticResource LimeBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Width="34" Height="34" Margin="0,10,0,0" />
+                                            <TextBlock Text="LOCAL" Style="{StaticResource LabelText}" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,14" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+
+                                <Grid Margin="0,16,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.55*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <Border Style="{StaticResource Card}">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="PC status" Style="{StaticResource CardTitle}" />
+                                                    <Border Grid.Column="1" Style="{StaticResource Badge}" Background="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="6" Height="6" Fill="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                                            <TextBlock Text="{Binding ScanStatusLabel}" FontSize="10.5" Foreground="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}}" FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding PcStatusLabel}" FontFamily="{StaticResource DisplayFont}" FontSize="24" FontWeight="SemiBold" Margin="0,12,0,4" />
+                                                <TextBlock Text="{Binding PcStatusDetail}" Style="{StaticResource BodyText}" />
+                                                <TextBlock Text="{Binding SelectedRootsDisplay}" Style="{StaticResource SmallText}" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding SelectedRootsDisplay}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                                    <Button Content="Open scan" Style="{StaticResource SecondaryButton}" Command="{Binding NavigateScanCommand}" Margin="0,0,8,0" />
+                                                    <Button Content="Close results" Style="{StaticResource GhostButton}" Command="{Binding CloseResultsCommand}" />
+                                                </StackPanel>
+                                                <StackPanel Margin="0,14,0,0" Visibility="{Binding ShowScanMetrics, Converter={StaticResource BoolToVisibility}}">
+                                                    <Border Style="{StaticResource Divider}" Margin="0,0,0,10" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding FilesCheckedText}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                        <TextBlock Text=" files checked  ·  " Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding FindingCountText}" FontWeight="SemiBold" Foreground="{StaticResource AmberBrush}" />
+                                                        <TextBlock Text=" items  ·  " Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding InaccessibleCountText}" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                        <TextBlock Text=" inaccessible" Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding HasScanOutcome, Converter={StaticResource BoolToVisibility}}">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Results in this session" Style="{StaticResource CardTitle}" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding LastScanText}" Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                                </Grid>
+                                                <Grid Margin="0,14,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding FilesCheckedText}" FontSize="20" FontWeight="SemiBold" />
+                                                        <TextBlock Text="FILES CHECKED" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding HighCountText}" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource RedBrush}" />
+                                                        <TextBlock Text="HIGH" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="{Binding MediumCountText}" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource AmberBrush}" />
+                                                        <TextBlock Text="MEDIUM" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="3">
+                                                        <TextBlock Text="{Binding InaccessibleCountText}" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                        <TextBlock Text="INACCESSIBLE" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <TextBlock Text="{Binding ScanSummaryText}" Style="{StaticResource SmallText}" Margin="0,12,0,0" />
+                                                <Button Content="Review findings" Style="{StaticResource TextLinkButton}" HorizontalAlignment="Left" Margin="0,8,0,0" Command="{Binding NavigateScanCommand}" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                                            <Expander>
+                                                <Expander.Header>
+                                                    <TextBlock Text="What gets scanned?" Style="{StaticResource CardTitle}" />
+                                                </Expander.Header>
+                                                <StackPanel>
+                                                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,12"
+                                                               Text="WTX PC CHECK inspects the selected drives and their subfolders, including hidden and system files where Windows permits access. It reads metadata, executable signatures when a file is flagged, and limited static text from .lua scripts. It never executes a discovered program or script." />
+                                                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,8" Text="• Signatures, filenames, and locations of executable files and libraries, compared with a local indicator list." />
+                                                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,8" Text="• SHA-256 hashes of flagged files and of executables/scripts when a local hash list is configured." />
+                                                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,8" Text="• .lua and .luau scripts reviewed as text only, separate from executables. Scripts are not automatically executors or malware." />
+                                                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,8" Text="• Basic Windows security status, startup entries, and an optional Windows Defender scan you start explicitly." />
+                                                    <TextBlock Style="{StaticResource SmallText}" Margin="0,10,0,0"
+                                                               Text="Not scanned: files on drives you did not select, cloud-only files whose contents were not downloaded, reparse-point folders, protected areas Windows blocks, and anything outside the local access of this app. Detection is not perfect." />
+                                                </StackPanel>
+                                            </Expander>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <Border Style="{StaticResource Card}">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Updates" Style="{StaticResource CardTitle}" />
+                                                    <Border Grid.Column="1" Style="{StaticResource Badge}" Background="{Binding UpdateTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding UpdateTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1">
+                                                        <TextBlock Text="{Binding UpdateStateLabel}" FontSize="10.5" Foreground="{Binding UpdateTone, Converter={StaticResource ToneToBrush}}" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding UpdateMessage}" Style="{StaticResource BodyText}" Margin="0,10,0,0" />
+                                                <TextBlock Text="{Binding UpdateLatestVersionText}" Style="{StaticResource SmallText}" Foreground="{StaticResource AccentBrush}" Margin="0,6,0,0" Visibility="{Binding UpdateLatestVersionText, Converter={StaticResource StringToVisibility}}" />
+                                                <StackPanel Margin="0,12,0,0" Visibility="{Binding UpdateShowProgress, Converter={StaticResource BoolToVisibility}}">
+                                                    <ProgressBar Value="{Binding UpdateProgressPercent, Mode=OneWay}" Maximum="100" />
+                                                    <TextBlock Text="{Binding UpdateProgressText}" Style="{StaticResource SmallText}" Margin="0,5,0,0" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                                    <Button Content="Check now" Style="{StaticResource SecondaryButton}" Command="{Binding CheckUpdatesCommand}" Padding="12,7" Visibility="{Binding CanInstallUpdate, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                                                    <Button Content="Restart and install" Style="{StaticResource PrimaryButton}" Command="{Binding InstallUpdateCommand}" Padding="12,7" Visibility="{Binding CanInstallUpdate, Converter={StaticResource BoolToVisibility}}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding LastUpdateCheckText}" Style="{StaticResource SmallText}" Margin="0,9,0,0" />
+                                                <Border Style="{StaticResource Divider}" Margin="0,12" />
+                                                <WrapPanel>
+                                                    <TextBlock Text="Automatic updates" Style="{StaticResource SmallText}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <TextBlock Text="{Binding AutomaticUpdatesText}" Style="{StaticResource SmallText}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                                    <Button Content="Settings" Style="{StaticResource TextLinkButton}" Command="{Binding NavigateSettingsCommand}" />
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Windows security" Style="{StaticResource CardTitle}" />
+                                                    <Border Grid.Column="1" Style="{StaticResource Badge}" Background="{Binding SecurityTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding SecurityTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1">
+                                                        <TextBlock Text="{Binding SecurityStateLabel}" FontSize="10.5" Foreground="{Binding SecurityTone, Converter={StaticResource ToneToBrush}}" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding SecurityCheckedText}" Style="{StaticResource SmallText}" Margin="0,7,0,10" />
+                                                <Grid Margin="0,0,0,9">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="Windows &amp; Defender" Style="{StaticResource LabelText}" />
+                                                        <TextBlock Text="{Binding DefenderStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Content="Refresh" Style="{StaticResource GhostButton}" Command="{Binding RefreshSecurityCommand}" Padding="8,4" />
+                                                </Grid>
+                                                <TextBlock Text="{Binding DefenderDetailText}" Style="{StaticResource SmallText}" Margin="0,0,0,10" />
+                                                <Border Style="{StaticResource Divider}" Margin="0,0,0,10" />
+                                                <TextBlock Text="Firewall" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding FirewallStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,2,0,2" />
+                                                <TextBlock Text="{Binding FirewallDetailText}" Style="{StaticResource SmallText}" Margin="0,0,0,10" />
+                                                <TextBlock Text="Windows Update" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding UpdatesStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,2,0,2" />
+                                                <TextBlock Text="{Binding UpdatesDetailText}" Style="{StaticResource SmallText}" Margin="0,0,0,8" />
+                                                <TextBlock Text="{Binding RegisteredAntivirusText}" Style="{StaticResource SmallText}" Margin="0,4,0,10" />
+                                                <StackPanel>
+                                                    <Button Content="Security details" Style="{StaticResource TextLinkButton}" HorizontalAlignment="Left" Command="{Binding NavigateScanCommand}" />
+                                                    <Button Content="Open Windows Security" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Command="{Binding OpenWindowsSecurityCommand}" Padding="8,4" Margin="0,3,0,0" />
+                                                </StackPanel>
+                                                <TextBlock Text="These checks are separate from file findings and do not replace Windows Security." Style="{StaticResource SmallText}" Margin="0,10,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource SmallText}" Margin="0,20,0,0" HorizontalAlignment="Center" TextAlignment="Center"
+                                           Text="WTX PC CHECK · Made by WERTIX · Scans stay on this PC · No results are saved after you close them or exit the app." />
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- SCAN -->
+                        <ScrollViewer Style="{StaticResource PageScroll}" Visibility="{Binding IsScanPage, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel MaxWidth="1180" HorizontalAlignment="Stretch" Margin="28,24,28,32">
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Scan" Style="{StaticResource PageTitle}" />
+                                        <TextBlock Text="{Binding CurrentPageSubtitle}" Style="{StaticResource BodyText}" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Refresh drives" Style="{StaticResource SecondaryButton}" Command="{Binding RefreshDrivesCommand}" VerticalAlignment="Top" />
+                                </Grid>
+
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Scan scope" Style="{StaticResource CardTitle}" />
+                                                <TextBlock Text="{Binding SelectedScopeSummary}" Style="{StaticResource SmallText}" Margin="0,3,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Button Content="All fixed drives" Style="{StaticResource GhostButton}" Command="{Binding SelectFixedDrivesCommand}" />
+                                                <Button Content="Clear" Style="{StaticResource GhostButton}" Command="{Binding ClearDriveSelectionCommand}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Style="{StaticResource Divider}" />
+                                        <ItemsControl ItemsSource="{Binding Drives}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#121A1F" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="8" Margin="0,0,0,6" Padding="12,9">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                      IsEnabled="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBool}}"
+                                                                      AutomationProperties.Name="{Binding DisplayName}">
+                                                                <StackPanel Margin="0,1,0,0">
+                                                                    <TextBlock Text="{Binding DisplayName}" FontSize="12.5" FontWeight="SemiBold" />
+                                                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource SmallText}" Margin="0,2,0,0" />
+                                                                </StackPanel>
+                                                            </CheckBox>
+                                                            <TextBlock Grid.Column="1" Text="{Binding TypeLabel}" Style="{StaticResource SmallText}" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock Text="No drive is selected. Select a drive above, or use Refresh drives if Windows does not list your drive." Style="{StaticResource SmallText}" Margin="0,6,0,0"
+                                                   Visibility="{Binding HasSelectedDrives, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                                        <TextBlock Style="{StaticResource SmallText}" Margin="0,8,0,0"
+                                                   Text="Fixed drives are selected by default. Removable and network drives are opt-in. Network scans can be slow and may fail if the connection drops. A confirmation explaining purpose and privacy appears before every scan." />
+                                    </StackPanel>
+                                </Border>
+
+                                <WrapPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding StartScanCommand}" Padding="18,10" Margin="0,0,10,8" AutomationProperties.Name="Start Full PC Scan">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="M3,3 H21 V21 H3 Z M7,7 H10 V10 H7 Z M14,7 H17 V10 H14 Z M7,14 H10 V17 H7 Z M14,14 H17 V17 H14 Z" Stroke="{StaticResource DarkTextBrush}" StrokeThickness="1.4" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" />
+                                            <TextBlock Text="Start Full PC Scan" Foreground="{StaticResource DarkTextBrush}" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Content="Cancel scan" Style="{StaticResource SecondaryButton}" Command="{Binding CancelScanCommand}" Margin="0,0,10,8"
+                                            Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}" />
+                                    <Button Content="Run Windows Defender scan" Style="{StaticResource SecondaryButton}" Command="{Binding RunDefenderScanCommand}" Margin="0,0,10,8" />
+                                    <Button Content="Cancel Defender scan" Style="{StaticResource SecondaryButton}" Command="{Binding CancelDefenderScanCommand}" Margin="0,0,0,8"
+                                            Visibility="{Binding IsDefenderScanning, Converter={StaticResource BoolToVisibility}}" />
+                                </WrapPanel>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Style="{StaticResource Badge}" Background="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1" VerticalAlignment="Top" Margin="0,1,10,0">
+                                                    <TextBlock Text="{Binding ScanStatusLabel}" FontSize="10.5" Foreground="{Binding PcStatusTone, Converter={StaticResource ToneToBrush}}" FontWeight="SemiBold" />
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="{Binding ScanStatusDetail}" Style="{StaticResource BodyText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            </Grid>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                                <TextBlock Text="Elapsed" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                                <TextBlock Text="{Binding ScanElapsedText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Height="4" CornerRadius="2" Background="#22303A" Margin="0,14,0,0" ClipToBounds="True"
+                                                Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}">
+                                            <Border x:Name="ScanLine" Width="150" HorizontalAlignment="Left" CornerRadius="2">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                        <GradientStop Color="#002FD4C4" Offset="0" />
+                                                        <GradientStop Color="#2FD4C4" Offset="0.45" />
+                                                        <GradientStop Color="#A6E22E" Offset="1" />
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                                <Border.RenderTransform>
+                                                    <TranslateTransform x:Name="ScanLineTransform" X="0" />
+                                                </Border.RenderTransform>
+                                            </Border>
+                                        </Border>
+
+                                        <Grid Margin="0,16,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding FilesCheckedText}" FontFamily="{StaticResource DisplayFont}" FontSize="25" FontWeight="SemiBold" />
+                                                <TextBlock Text="FILES CHECKED" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding FindingCountText}" FontFamily="{StaticResource DisplayFont}" FontSize="25" FontWeight="SemiBold" Foreground="{StaticResource AmberBrush}" />
+                                                <TextBlock Text="ITEMS TO REVIEW" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="{Binding InaccessibleCountText}" FontFamily="{StaticResource DisplayFont}" FontSize="25" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                <TextBlock Text="INACCESSIBLE" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="3">
+                                                <TextBlock Text="{Binding DirectoriesCheckedText}" FontFamily="{StaticResource DisplayFont}" FontSize="25" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                <TextBlock Text="FOLDERS CHECKED" Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Style="{StaticResource InnerPanel}" Margin="0,14,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="CURRENT LOCATION" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding CurrentPath, TargetNullValue=Waiting for the scan to begin.}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding CurrentPath}" Margin="0,4,0,0" />
+                                                <TextBlock Text="{Binding LiveScanMetrics}" Style="{StaticResource SmallText}" Margin="0,6,0,0" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding LastScanText}" Style="{StaticResource SmallText}" Margin="0,4,0,0" Visibility="{Binding LastScanText, Converter={StaticResource StringToVisibility}}" />
+                                        <StackPanel Margin="0,8,0,0" Visibility="{Binding ScanScopeDisplay, Converter={StaticResource StringToVisibility}}">
+                                            <TextBlock Text="AREAS IN THIS SCAN" Style="{StaticResource LabelText}" />
+                                            <TextBlock Text="{Binding ScanScopeDisplay}" Style="{StaticResource MonoText}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                                        </StackPanel>
+
+                                        <Border Style="{StaticResource InnerPanel}" Margin="0,14,0,0" Visibility="{Binding IsDefenderScanning, Converter={StaticResource BoolToVisibility}}" Background="#171F24" BorderBrush="#31434E">
+                                            <StackPanel>
+                                                <TextBlock Text="WINDOWS DEFENDER · SEPARATE CHECK" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBrush}" />
+                                                <TextBlock Text="{Binding DefenderProgressText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,4,0,0" />
+                                                <TextBlock Text="Defender is using its own engine. WTX PC CHECK is only waiting for its exit result. No file actions are taken by this custom scan." Style="{StaticResource SmallText}" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Findings" Style="{StaticResource CardTitle}" />
+                                                <TextBlock Text="Indicators are shown with their detection method and limitations. They are not proof of malware." Style="{StaticResource SmallText}" Margin="0,3,0,0" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="Close results" Style="{StaticResource GhostButton}" Command="{Binding CloseResultsCommand}" VerticalAlignment="Top" />
+                                        </Grid>
+
+                                        <Grid Margin="0,14,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <ListBox Style="{StaticResource ChipListBox}" ItemsSource="{Binding FindingFilters}" SelectedItem="{Binding SelectedFilter, Mode=TwoWay}" AutomationProperties.Name="Finding filters">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Label}" FontSize="11.5" />
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <TextBlock Text="{Binding FindingCountText}" Style="{StaticResource SmallText}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                                <TextBlock Text="items in this session" Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border x:Name="FindingsEmptyState" Background="#121A1F" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9" Padding="24" Visibility="{Binding HasVisibleFindings, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <Path Data="M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z M8,12 L11,15 L16,9" Stroke="{StaticResource TextMutedBrush}" StrokeThickness="1.4" Stretch="Uniform" Width="34" Height="38" Opacity="0.7" />
+                                                <TextBlock Text="{Binding FindingsEmptyText}" Style="{StaticResource BodyText}" TextAlignment="Center" Margin="0,10,0,0" MaxWidth="520" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <ListBox x:Name="FindingsList" Style="{StaticResource BorderlessListBox}" ItemsSource="{Binding FindingsView}" MaxHeight="720"
+                                                 Visibility="{Binding HasVisibleFindings, Converter={StaticResource BoolToVisibility}}"
+                                                 AutomationProperties.Name="Scan findings">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#152026" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9" Padding="16">
+                                                        <StackPanel>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Border Style="{StaticResource Badge}" Background="{Binding Risk, Converter={StaticResource RiskToBrush}, ConverterParameter=soft}" BorderBrush="{Binding Risk, Converter={StaticResource RiskToBrush}}" BorderThickness="1" Margin="0,0,8,0">
+                                                                        <TextBlock Text="{Binding RiskLabel}" FontSize="10.5" FontWeight="SemiBold" Foreground="{Binding Risk, Converter={StaticResource RiskToBrush}}" />
+                                                                    </Border>
+                                                                    <Border Grid.Column="1" Style="{StaticResource Badge}" Background="#1B252B" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="0,0,8,0">
+                                                                        <TextBlock Text="{Binding CategoryLabel}" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                                                </Grid>
+                                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding SizeText}" Style="{StaticResource SmallText}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                                    <TextBlock Text="{Binding ModifiedText}" Style="{StaticResource SmallText}" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                            <TextBlock Text="{Binding FullPath}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding FullPath}" Margin="0,7,0,0" />
+                                                            <TextBlock Text="{Binding Explanation}" Style="{StaticResource BodyText}" Margin="0,8,0,0" MaxHeight="62" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Style="{StaticResource SmallText}" Margin="0,7,0,0">
+                                                                <Run Text="Detection: " Foreground="{StaticResource TextMutedBrush}" />
+                                                                <Run Text="{Binding DetectionMethod, Mode=OneWay}" />
+                                                            </TextBlock>
+                                                            <TextBlock Style="{StaticResource SmallText}" Margin="0,3,0,0">
+                                                                <Run Text="Limitations: " Foreground="{StaticResource TextMutedBrush}" />
+                                                                <Run Text="{Binding Limitations, Mode=OneWay}" />
+                                                            </TextBlock>
+                                                            <Grid Margin="0,10,0,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel>
+                                                                    <TextBlock Style="{StaticResource SmallText}">
+                                                                        <Run Text="Signature: " Foreground="{StaticResource TextMutedBrush}" />
+                                                                        <Run Text="{Binding Signature.StatusText, Mode=OneWay}" />
+                                                                    </TextBlock>
+                                                                    <TextBlock Text="{Binding Sha256, TargetNullValue=No SHA-256 computed}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Sha256}" Margin="0,3,0,0" />
+                                                                </StackPanel>
+                                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                                    <Button Content="View Details" Style="{StaticResource SecondaryButton}" Padding="11,6" Command="{Binding DataContext.ViewFindingDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Margin="0,0,8,0" />
+                                                                    <Button Content="Open File Location" Style="{StaticResource GhostButton}" Padding="9,6" Command="{Binding DataContext.OpenFindingLocationCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+
+                                        <TextBlock Style="{StaticResource SmallText}" Margin="0,4,0,0"
+                                                   Text="WTX PC CHECK does not run, modify, delete, move, or quarantine any file. Review a finding yourself before you act on it." />
+                                        <TextBlock Text="The 1,000-item finding display cap was reached. Additional matches were not listed." Style="{StaticResource SmallText}" Foreground="{StaticResource AmberBrush}" Margin="0,5,0,0"
+                                                   Visibility="{Binding FindingLimitReached, Converter={StaticResource BoolToVisibility}}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <Expander>
+                                        <Expander.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Areas that could not be fully read" Style="{StaticResource CardTitle}" />
+                                                <Border Style="{StaticResource Badge}" Background="#1B252B" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="9,0,0,0">
+                                                    <TextBlock Text="{Binding InaccessibleCountText}" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                </Border>
+                                            </StackPanel>
+                                        </Expander.Header>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,8"
+                                                       Text="Permissions, locks, disconnected drives, long paths, and protected system areas can prevent a file or folder from being read. The count is complete for this session, while the path list is capped for display." />
+                                            <TextBlock Text="{Binding ScannedAreasDisplay}" Style="{StaticResource SmallText}" Margin="0,0,0,8" Visibility="{Binding ScannedAreasDisplay, Converter={StaticResource StringToVisibility}}" />
+                                            <TextBlock Text="{Binding InaccessibleTruncationNote}" Style="{StaticResource SmallText}" Foreground="{StaticResource AmberBrush}" Margin="0,0,0,8" Visibility="{Binding InaccessibleTruncationNote, Converter={StaticResource StringToVisibility}}" />
+                                            <Border Style="{StaticResource InnerPanel}" Padding="4" MaxHeight="280">
+                                                <ListBox ItemsSource="{Binding InaccessibleAreas}" Background="Transparent" BorderThickness="0" MaxHeight="272" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                    <ListBox.ItemContainerStyle>
+                                                        <Style TargetType="ListBoxItem">
+                                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                            <Setter Property="Padding" Value="0" />
+                                                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                                        <ContentPresenter />
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </ListBox.ItemContainerStyle>
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="0,0,0,1" Padding="10,7">
+                                                                <StackPanel>
+                                                                    <TextBlock Text="{Binding Path}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
+                                                                    <TextBlock Text="{Binding Reason}" Style="{StaticResource SmallText}" Margin="0,2,0,0" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+                                            </Border>
+                                        </StackPanel>
+                                    </Expander>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Windows security status" Style="{StaticResource CardTitle}" />
+                                                <TextBlock Text="{Binding SecurityCheckedText}" Style="{StaticResource SmallText}" Margin="0,3,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Button Content="Refresh" Style="{StaticResource SecondaryButton}" Command="{Binding RefreshSecurityCommand}" Margin="0,0,8,0" />
+                                                <Button Content="Open Windows Security" Style="{StaticResource GhostButton}" Command="{Binding OpenWindowsSecurityCommand}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Style="{StaticResource Divider}" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Margin="0,0,16,0">
+                                                <TextBlock Text="WINDOWS" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding WindowsStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding WindowsSupportText}" Style="{StaticResource SmallText}" Margin="0,2,0,12" />
+
+                                                <TextBlock Text="WINDOWS DEFENDER" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding DefenderStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding DefenderDetailText}" Style="{StaticResource SmallText}" Margin="0,2,0,12" />
+
+                                                <TextBlock Text="ANTIVIRUS REGISTERED WITH WINDOWS" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding RegisteredAntivirusText}" Style="{StaticResource BodyText}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="WINDOWS FIREWALL" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding FirewallStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding FirewallDetailText}" Style="{StaticResource SmallText}" Margin="0,2,0,12" />
+
+                                                <TextBlock Text="WINDOWS UPDATE" Style="{StaticResource LabelText}" />
+                                                <TextBlock Text="{Binding UpdatesStatusText}" Style="{StaticResource BodyText}" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding UpdatesDetailText}" Style="{StaticResource SmallText}" Margin="0,2,0,8" />
+                                                <Button Content="Open Windows Update" Style="{StaticResource TextLinkButton}" HorizontalAlignment="Left" Command="{Binding OpenWindowsUpdateCommand}" />
+                                                <TextBlock Text="{Binding SecurityErrorText}" Style="{StaticResource SmallText}" Foreground="{StaticResource AmberBrush}" Margin="0,8,0,0" Visibility="{Binding SecurityErrorText, Converter={StaticResource StringToVisibility}}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Style="{StaticResource Divider}" />
+                                        <TextBlock Style="{StaticResource SmallText}"
+                                                   Text="Windows Update searches and Defender status checks are performed by Windows components and may contact Microsoft according to your Windows settings. They do not send scan results. These checks do not replace Windows Security, and pending-update classification can be incomplete." />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,18,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Windows Defender scan" Style="{StaticResource CardTitle}" />
+                                                <Border Grid.Column="1" Style="{StaticResource Badge}" Background="{Binding DefenderResultTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding DefenderResultTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1">
+                                                    <TextBlock Text="Separate from file findings" FontSize="10" Foreground="{Binding DefenderResultTone, Converter={StaticResource ToneToBrush}}" FontWeight="SemiBold" />
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0"
+                                                       Text="This starts an actual Windows Defender custom scan on the selected local drives with remediation disabled. It can take a long time. WTX PC CHECK reports Defender's exit result and does not invent detections. Open Windows Security for Defender's own details." />
+                                            <TextBlock Text="{Binding DefenderProgressText}" Style="{StaticResource SmallText}" Foreground="{StaticResource AccentBrush}" Margin="0,7,0,0" Visibility="{Binding DefenderProgressText, Converter={StaticResource StringToVisibility}}" />
+                                            <TextBlock Text="{Binding DefenderResultSummary}" Style="{StaticResource SmallText}" Margin="0,7,0,0" />
+                                            <TextBlock Style="{StaticResource SmallText}" Margin="0,7,0,0"
+                                                       Text="Defender can still act through real-time protection according to your Windows settings. WTX PC CHECK never changes Defender policy or requests administrator access." />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <Button Content="Run Defender scan" Style="{StaticResource SecondaryButton}" Command="{Binding RunDefenderScanCommand}" Margin="0,0,0,7" />
+                                            <Button Content="Cancel Defender scan" Style="{StaticResource GhostButton}" Command="{Binding CancelDefenderScanCommand}"
+                                                    Visibility="{Binding IsDefenderScanning, Converter={StaticResource BoolToVisibility}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <Expander>
+                                        <Expander.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Startup entries" Style="{StaticResource CardTitle}" />
+                                                <Border Style="{StaticResource Badge}" Background="#1B252B" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="9,0,0,0">
+                                                    <TextBlock Text="{Binding StartupSummaryText}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" MaxWidth="360" TextTrimming="CharacterEllipsis" />
+                                                </Border>
+                                            </StackPanel>
+                                        </Expander.Header>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,8"
+                                                       Text="Startup entries are reviewed separately from file findings. A startup entry is not proof of malware. WTX PC CHECK resolves an executable path when possible, checks its signature, and flags unsigned targets in user-writable folders for review. It never disables or changes an entry." />
+                                            <TextBlock Text="{Binding StartupNote}" Style="{StaticResource SmallText}" Foreground="{StaticResource AmberBrush}" Visibility="{Binding StartupNote, Converter={StaticResource StringToVisibility}}" Margin="0,0,0,8" />
+                                            <TextBlock Text="No startup entries were found in the checked locations." Style="{StaticResource SmallText}" Margin="0,4,0,0"
+                                                       Visibility="{Binding HasStartupEntries, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                                            <ItemsControl ItemsSource="{Binding StartupEntries}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#121A1F" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="8" Padding="13" Margin="0,0,0,7">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <Border Style="{StaticResource Badge}" Background="{Binding Risk, Converter={StaticResource RiskToBrush}, ConverterParameter=soft}" BorderBrush="{Binding Risk, Converter={StaticResource RiskToBrush}}" BorderThickness="1" Margin="0,0,8,0">
+                                                                            <TextBlock Text="{Binding RiskLabel}" FontSize="10" FontWeight="SemiBold" Foreground="{Binding Risk, Converter={StaticResource RiskToBrush}}" />
+                                                                        </Border>
+                                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="220" />
+                                                                        <TextBlock Text="{Binding Source}" Style="{StaticResource SmallText}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="180" />
+                                                                    </StackPanel>
+                                                                    <TextBlock Text="{Binding Command}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding Command}" Margin="0,6,0,0" />
+                                                                    <TextBlock Text="{Binding ExecutablePath, TargetNullValue=Executable path could not be resolved}" Style="{StaticResource SmallText}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                                                                    <TextBlock Text="{Binding Explanation}" Style="{StaticResource SmallText}" Margin="0,5,0,0" />
+                                                                    <TextBlock Style="{StaticResource SmallText}" Margin="0,4,0,0">
+                                                                        <Run Text="Signature: " Foreground="{StaticResource TextMutedBrush}" />
+                                                                        <Run Text="{Binding Signature.StatusText, Mode=OneWay}" />
+                                                                    </TextBlock>
+                                                                </StackPanel>
+                                                                <Button Grid.Column="1" Content="Open location" Style="{StaticResource GhostButton}" VerticalAlignment="Top" Command="{Binding DataContext.OpenStartupLocationCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Expander>
+                                </Border>
+
+                                <Border Style="{StaticResource InnerPanel}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Detection limits" Style="{StaticResource CardTitle}" Margin="0,0,0,5" />
+                                        <TextBlock Style="{StaticResource SmallText}"
+                                                   Text="WTX PC CHECK is a local review tool, not an antivirus replacement. It can miss threats and can flag legitimate files. It does not use cloud analysis, reputation services, or dynamic execution. Hash matching is inactive unless a verified local hash list is included in the build. Files that are locked, encrypted, cloud-only, inside reparse-point folders, or blocked by permissions are not inspected. Archives are not unpacked, and running processes are not memory-scanned. Accessible Lua text is read statically up to 256 KB and never executed. A clean result is never a guarantee." />
+                                        <TextBlock Style="{StaticResource SmallText}" Margin="0,8,0,0"
+                                                   Text="No telemetry, analytics, cloud hash lookup, or scan history. Results exist only in memory and are discarded when you close them or exit the app." />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- SETTINGS -->
+                        <ScrollViewer Style="{StaticResource PageScroll}" Visibility="{Binding IsSettingsPage, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel MaxWidth="980" HorizontalAlignment="Stretch" Margin="28,24,28,32">
+                                <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
+                                <TextBlock Text="{Binding CurrentPageSubtitle}" Style="{StaticResource BodyText}" Margin="0,4,0,18" />
+
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <CheckBox Style="{StaticResource SwitchCheckBox}" IsChecked="{Binding AutomaticUpdates, Mode=TwoWay}" AutomationProperties.Name="Automatic updates">
+                                            <StackPanel>
+                                                <TextBlock Text="Automatic updates" FontSize="14" FontWeight="SemiBold" />
+                                                <TextBlock Text="Check on startup and at the selected interval. Verified updates can be downloaded automatically, but WTX PC CHECK always asks before restarting." Style="{StaticResource SmallText}" Margin="0,2,0,0" MaxWidth="650" />
+                                            </StackPanel>
+                                        </CheckBox>
+
+                                        <Border Style="{StaticResource Divider}" />
+                                        <TextBlock Text="UPDATE INTERVAL" Style="{StaticResource LabelText}" Margin="0,0,0,8" />
+                                        <StackPanel Orientation="Horizontal" IsEnabled="{Binding AutomaticUpdates}">
+                                            <RadioButton Style="{StaticResource SegmentRadio}" GroupName="UpdateInterval" Content="Every hour" IsChecked="{Binding Interval1, Mode=TwoWay}" />
+                                            <RadioButton Style="{StaticResource SegmentRadio}" GroupName="UpdateInterval" Content="Every 6 hours" IsChecked="{Binding Interval6, Mode=TwoWay}" />
+                                            <RadioButton Style="{StaticResource SegmentRadio}" GroupName="UpdateInterval" Content="Every 12 hours" IsChecked="{Binding Interval12, Mode=TwoWay}" />
+                                            <RadioButton Style="{StaticResource SegmentRadio}" GroupName="UpdateInterval" Content="Every 24 hours" IsChecked="{Binding Interval24, Mode=TwoWay}" />
+                                        </StackPanel>
+                                        <TextBlock Text="Scanning is never scheduled or started automatically." Style="{StaticResource SmallText}" Margin="0,8,0,0" />
+
+                                        <Border Style="{StaticResource Divider}" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Update status" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <Border Style="{StaticResource Badge}" Background="{Binding UpdateTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding UpdateTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1">
+                                                        <TextBlock Text="{Binding UpdateStateLabel}" FontSize="10" Foreground="{Binding UpdateTone, Converter={StaticResource ToneToBrush}}" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding UpdateMessage}" Style="{StaticResource BodyText}" Margin="0,7,0,0" />
+                                                <TextBlock Text="{Binding UpdateLatestVersionText}" Style="{StaticResource SmallText}" Foreground="{StaticResource AccentBrush}" Margin="0,4,0,0" Visibility="{Binding UpdateLatestVersionText, Converter={StaticResource StringToVisibility}}" />
+                                                <TextBlock Text="{Binding LastUpdateCheckText}" Style="{StaticResource SmallText}" Margin="0,4,0,0" />
+                                                <StackPanel Margin="0,10,0,0" Visibility="{Binding UpdateShowProgress, Converter={StaticResource BoolToVisibility}}">
+                                                    <ProgressBar Value="{Binding UpdateProgressPercent, Mode=OneWay}" Maximum="100" />
+                                                    <TextBlock Text="{Binding UpdateProgressText}" Style="{StaticResource SmallText}" Margin="0,5,0,0" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                                                <Button Content="Check now" Style="{StaticResource SecondaryButton}" Command="{Binding CheckUpdatesCommand}" Margin="0,0,0,7"
+                                                        Visibility="{Binding CanInstallUpdate, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                                                <Button Content="Restart and install" Style="{StaticResource PrimaryButton}" Command="{Binding InstallUpdateCommand}"
+                                                        Visibility="{Binding CanInstallUpdate, Converter={StaticResource BoolToVisibility}}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Style="{StaticResource Divider}" />
+                                        <TextBlock Text="UPDATE SOURCE" Style="{StaticResource LabelText}" />
+                                        <TextBlock Text="{Binding UpdateSourceDisplay}" Style="{StaticResource MonoText}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                                        <TextBlock Text="EXPECTED SIGNING CERTIFICATE (SHA-256 THUMBPRINT)" Style="{StaticResource LabelText}" />
+                                        <TextBlock Text="{Binding UpdateSignerDisplay}" Style="{StaticResource MonoText}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                                        <Border Style="{StaticResource Badge}" Background="{Binding UpdateConfigurationTone, Converter={StaticResource ToneToBrush}, ConverterParameter=soft}" BorderBrush="{Binding UpdateConfigurationTone, Converter={StaticResource ToneToBrush}}" BorderThickness="1" HorizontalAlignment="Stretch" Margin="0,2,0,7">
+                                            <TextBlock Text="{Binding UpdateConfigurationStatus}" FontSize="11" Foreground="{Binding UpdateConfigurationTone, Converter={StaticResource ToneToBrush}}" TextWrapping="Wrap" />
+                                        </Border>
+                                        <TextBlock Style="{StaticResource SmallText}"
+                                                   Text="Updates are accepted only over HTTPS when the download matches the manifest hash AND has a valid Authenticode signature from the configured certificate thumbprint. Automatic checks are disabled while the source is a placeholder. Signing credentials belong to the maintainer and are never stored by the app." />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <CheckBox Style="{StaticResource SwitchCheckBox}" IsChecked="{Binding ReduceMotion, Mode=TwoWay}" AutomationProperties.Name="Reduce motion">
+                                            <StackPanel>
+                                                <TextBlock Text="Reduce motion" FontSize="14" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding ReduceMotionDetail}" Style="{StaticResource SmallText}" Margin="0,2,0,0" MaxWidth="650" />
+                                            </StackPanel>
+                                        </CheckBox>
+                                        <TextBlock Style="{StaticResource SmallText}" Margin="0,10,0,0"
+                                                   Text="When reduced, page fades and the moving scan line are disabled. Status text, real counts, and the current scan state remain visible. WTX PC CHECK also respects the Windows animation setting." />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Local preferences and privacy" Style="{StaticResource CardTitle}" />
+                                        <TextBlock Style="{StaticResource BodyText}" Margin="0,7,0,0"
+                                                   Text="Only these preferences are stored locally: automatic-update choices, the update interval, the reduced-motion choice, and the time of the last update check. File names, paths, hashes, findings, inaccessible areas, and scan reports are never saved." />
+                                        <TextBlock Text="SETTINGS FILE" Style="{StaticResource LabelText}" Margin="0,14,0,0" />
+                                        <TextBlock Text="{Binding SettingsPathDisplay}" Style="{StaticResource MonoText}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                            <Button Content="Open settings folder" Style="{StaticResource SecondaryButton}" Command="{Binding OpenLocalDataFolderCommand}" Margin="0,0,8,0" />
+                                            <Button Content="Close current results" Style="{StaticResource GhostButton}" Command="{Binding CloseResultsCommand}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource InnerPanel}" Margin="0,16,0,0">
+                                    <TextBlock Style="{StaticResource SmallText}"
+                                               Text="WTX PC CHECK does not request administrator access and does not install a service. Windows Security, Windows Update, and Defender checks use the current user's access rights. No scan data is sent to the update server, WERTIX, or any analytics service." />
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- ABOUT -->
+                        <ScrollViewer Style="{StaticResource PageScroll}" Visibility="{Binding IsAboutPage, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel MaxWidth="980" HorizontalAlignment="Stretch" Margin="28,24,28,32">
+                                <TextBlock Text="About" Style="{StaticResource PageTitle}" />
+                                <TextBlock Text="{Binding CurrentPageSubtitle}" Style="{StaticResource BodyText}" Margin="0,4,0,18" />
+
+                                <Border CornerRadius="14" BorderThickness="1" BorderBrush="#2B4148" Background="{StaticResource HeroGradient}" Padding="28">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="76" Height="76" CornerRadius="18" Background="#122126" BorderBrush="#2C5A57" BorderThickness="1" Margin="0,0,20,0">
+                                            <Path Data="M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z M7,12 L10.5,15.5 L17,8.5" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Margin="21" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="WTX PC CHECK" FontFamily="{StaticResource DisplayFont}" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                                            <TextBlock Text="Made by WERTIX" FontSize="16" FontWeight="SemiBold" Margin="0,2,0,4" />
+                                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource SmallText}" />
+                                            <TextBlock Text="A defensive, local PC check for Windows 10 22H2 and Windows 11, x64. Built with C#, WPF, and .NET 10." Style="{StaticResource SmallText}" Margin="0,6,0,0" MaxWidth="620" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Grid Margin="0,16,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Style="{StaticResource Card}" Grid.Column="0">
+                                        <StackPanel>
+                                            <TextBlock Text="Purpose" Style="{StaticResource CardTitle}" />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,7,0,0"
+                                                       Text="WTX PC CHECK helps reviewers look for potential Roblox cheat or executor programs and signs of malware, including trojans, on a Windows PC. It supports a safer, fairer community. It is not a cheat, executor, injector, or malware." />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0"
+                                                       Text="The scanner reads local metadata and content needed to display findings. It does not run any discovered program or script. It does not modify, delete, move, or quarantine files." />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Card}" Grid.Column="2">
+                                        <StackPanel>
+                                            <TextBlock Text="Privacy" Style="{StaticResource CardTitle}" />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,7,0,0"
+                                                       Text="Files, names, paths, contents, hashes, and results are not uploaded. There is no telemetry, analytics, crash reporting, cloud hash lookup, or scan history. Results remain in memory until you close them or exit the app." />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0"
+                                                       Text="Only update preferences and the time of the last update check are stored locally. The updater may contact the configured HTTPS source and may reveal standard connection information, but never scan data." />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Detection limits" Style="{StaticResource CardTitle}" />
+                                        <TextBlock Style="{StaticResource BodyText}" Margin="0,7,0,0"
+                                                   Text="Detection is based on explainable local indicators: file names, folder locations, digital signatures, optional local hashes, and limited static Lua text. A name or location is not proof. Legitimate files can be flagged, and threats can be missed. Obfuscation, packing, encrypted files, cloud-only placeholders, permissions, and locks can hide activity." />
+                                        <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0"
+                                                   Text="Windows Defender checks are performed by Microsoft's engine. WTX PC CHECK reports only what Windows exposes and never invents detections. A clean result from this app never guarantees that the PC is clean." />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Updater configuration in this build" Style="{StaticResource CardTitle}" />
+                                        <TextBlock Style="{StaticResource BodyText}" Margin="0,7,0,0"
+                                                   Text="No real update URL, publisher certificate, or signing key is bundled. The entries below are clearly marked placeholders until the maintainer provides them. Update checking is disabled while the placeholders remain." />
+                                        <TextBlock Text="HTTPS MANIFEST URL" Style="{StaticResource LabelText}" Margin="0,12,0,0" />
+                                        <TextBlock Text="{Binding UpdateSourceDisplay}" Style="{StaticResource MonoText}" TextWrapping="Wrap" Margin="0,3,0,8" />
+                                        <TextBlock Text="PUBLISHER CERTIFICATE SHA-256 THUMBPRINT" Style="{StaticResource LabelText}" />
+                                        <TextBlock Text="{Binding UpdateSignerDisplay}" Style="{StaticResource MonoText}" TextWrapping="Wrap" Margin="0,3,0,8" />
+                                        <TextBlock Text="{Binding UpdateConfigurationStatus}" Style="{StaticResource SmallText}" Margin="0,2,0,0" />
+                                        <TextBlock Style="{StaticResource SmallText}" Margin="0,8,0,0"
+                                                   Text="To release updates, the maintainer sets the update URL and certificate pin in source, publishes a signed EXE with Authenticode, and serves a manifest whose version, SHA-256 hash, download URL, publisher name, and signer thumbprint match. The updater stages the file in a temporary folder, verifies signature and hash, replaces the EXE only after exit, and restores the previous version if installation fails." />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource InnerPanel}" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="What this app never does" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
+                                        <TextBlock Style="{StaticResource SmallText}" Text="• It does not execute, modify, delete, move, or quarantine files." />
+                                        <TextBlock Style="{StaticResource SmallText}" Text="• It does not upload scan data, file information, or hashes." />
+                                        <TextBlock Style="{StaticResource SmallText}" Text="• It does not collect telemetry, analytics, or crash reports." />
+                                        <TextBlock Style="{StaticResource SmallText}" Text="• It does not install unsigned updates or request administrator access." />
+                                        <TextBlock Style="{StaticResource SmallText}" Text="• It does not claim that the PC is clean or that every threat was found." />
+                                        <TextBlock Style="{StaticResource SmallText}" Margin="0,10,0,0" Text="© 2026 WERTIX · WTX PC CHECK · For defensive review only." />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

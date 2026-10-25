@@ -1,0 +1,20 @@
+﻿<Application x:Class="WtxPcCheck.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WtxPcCheck"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <local:InverseBoolConverter x:Key="InverseBool" />
+            <local:StringToVisibilityConverter x:Key="StringToVisibility" />
+            <local:RiskToBrushConverter x:Key="RiskToBrush" />
+            <local:ToneToBrushConverter x:Key="ToneToBrush" />
+            <local:CountToVisibilityConverter x:Key="CountToVisibility" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+

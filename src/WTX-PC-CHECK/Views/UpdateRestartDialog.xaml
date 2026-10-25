@@ -1,0 +1,59 @@
+﻿<Window x:Class="WtxPcCheck.Views.UpdateRestartDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WTX PC CHECK update"
+        Width="620" SizeToContent="Height" MaxHeight="640"
+        WindowStyle="None" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Background="{StaticResource BgElevatedBrush}">
+        <Grid Margin="26">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" MouseLeftButtonDown="Header_MouseLeftButtonDown" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="38" Height="38" CornerRadius="9" Background="#173033" BorderBrush="#275854" BorderThickness="1">
+                    <Path Data="M12,3 V14 M12,18 V18.1 M4.5,20 L12,4 L19.5,20 Z" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Margin="9" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Update verified and ready" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionText" Style="{StaticResource SmallText}" Margin="0,2,0,0" />
+                </StackPanel>
+                <Button Grid.Column="2" Style="{StaticResource DangerCloseButton}" Click="Later_Click" ToolTip="Close and keep the current version" AutomationProperties.Name="Close update dialog">
+                    <Path Data="M4,4 L14,14 M14,4 L4,14" Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="17" Height="17" Stretch="Uniform" />
+                </Button>
+            </Grid>
+
+            <StackPanel Grid.Row="1">
+                <TextBlock Style="{StaticResource BodyText}" FontSize="13.5" Margin="0,0,0,12"
+                           Text="WTX PC CHECK needs to restart to replace the app file. The update was downloaded over HTTPS, its SHA-256 hash was checked, and its Authenticode publisher signature was verified against the configured certificate. If installation fails, the update helper restores the previous version." />
+                <TextBlock Style="{StaticResource SmallText}" Margin="0,0,0,12"
+                           Text="The app will close and reopen. It will not request administrator access. No scan data is included in an update request." />
+                <Border x:Name="NotesPanel" Style="{StaticResource InnerPanel}" Margin="0,0,0,4">
+                    <StackPanel>
+                        <TextBlock Text="Release notes from the update manifest" Style="{StaticResource LabelText}" Margin="0,0,0,5" />
+                        <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <TextBlock x:Name="NotesText" Style="{StaticResource SmallText}" TextWrapping="Wrap" />
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                <Button Content="Not now" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="Later_Click" />
+                <Button Content="Restart and update" Style="{StaticResource PrimaryButton}" Click="Restart_Click" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

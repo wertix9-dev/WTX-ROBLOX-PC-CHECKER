@@ -1,0 +1,80 @@
+﻿<Window x:Class="WtxPcCheck.Views.PrivacyDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Privacy &amp; Purpose"
+        Width="760" Height="650"
+        WindowStyle="None" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Background="{StaticResource BgElevatedBrush}">
+        <Grid Margin="28">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" MouseLeftButtonDown="Header_MouseLeftButtonDown" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="38" Height="38" CornerRadius="9" Background="#172B2E" BorderBrush="#275854" BorderThickness="1">
+                    <Path Data="M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z M7,12 L10.5,15.5 L17,8.5"
+                          Stroke="{StaticResource AccentBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Margin="9" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Privacy &amp; Purpose" FontFamily="{StaticResource DisplayFont}" FontSize="21" FontWeight="SemiBold" />
+                    <TextBlock Text="WTX PC CHECK · Made by WERTIX" Style="{StaticResource SmallText}" Margin="0,2,0,0" />
+                </StackPanel>
+                <Button Grid.Column="2" Style="{StaticResource DangerCloseButton}" Click="Cancel_Click" ToolTip="Close without scanning" AutomationProperties.Name="Close privacy dialog">
+                    <Path Data="M4,4 L14,14 M14,4 L4,14" Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="18" Height="18" Stretch="Uniform" />
+                </Button>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" Style="{StaticResource PageScroll}" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,4,0">
+                    <TextBlock Text="Before every scan" Style="{StaticResource BodyText}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,14"
+                               Text="WTX PC CHECK scans the selected drives and files locally for potential Roblox cheat or executor programs and signs of malware, including trojans. It is designed to help support a safer, fairer community. It is a defensive PC-check tool, not a cheat, executor, injector, or malware." />
+                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,14"
+                               Text="WTX PC CHECK does not upload or share your files, file names, paths, file contents, hashes, or scan results. Scanning is performed on this PC. Results remain visible in the app until you close them, then they are discarded. WTX PC CHECK does not keep scan history or collect telemetry, analytics, or crash reports." />
+                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,14"
+                               Text="The automatic updater may contact the configured update server to check for and download signed app updates. This may reveal standard connection information, such as your IP address and app version, but it does not send scan data. Windows or Windows Defender may keep its own local security history according to your Windows settings." />
+                    <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,18"
+                               Text="Detection is not perfect. Some threats may be missed, and legitimate files may sometimes be flagged." />
+
+                    <Border Style="{StaticResource InnerPanel}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Scope and limits" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
+                            <TextBlock Style="{StaticResource SmallText}"
+                                       Text="The scan is local. It does not execute, modify, delete, move, or quarantine files. It cannot guarantee that the PC is clean. Files locked by Windows, protected by permissions, or unavailable on a disconnected drive may not be checked." />
+                        </StackPanel>
+                    </Border>
+
+                    <CheckBox x:Name="ConfirmBox" Margin="0,4,0,0" AutomationProperties.Name="I understand and want to scan this PC">
+                        <TextBlock Text="I understand and want to scan this PC" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </CheckBox>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Grid Grid.Row="2" Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Style="{StaticResource SmallText}" VerticalAlignment="Center"
+                           Text="Start Scan stays disabled until the confirmation box is checked." />
+                <Button Grid.Column="1" Content="Cancel" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="Cancel_Click" />
+                <Button x:Name="StartScanButton" Grid.Column="2" Content="Start Scan" Style="{StaticResource PrimaryButton}"
+                        IsEnabled="{Binding IsChecked, ElementName=ConfirmBox}" Click="StartScan_Click" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
+
