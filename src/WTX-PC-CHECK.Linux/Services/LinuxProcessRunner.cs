@@ -90,7 +90,9 @@ public static class LinuxProcessRunner
     {
         if (Path.IsPathRooted(name) && File.Exists(name)) return name;
         var path = Environment.GetEnvironmentVariable("PATH") ?? "/usr/local/bin:/usr/bin:/bin";
-        foreach (var directory in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        var directories = path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
+        directories.AddRange(["/usr/local/sbin", "/usr/sbin", "/sbin"]);
+        foreach (var directory in directories.Distinct())
         {
             var candidate = Path.Combine(directory, name);
             if (File.Exists(candidate)) return candidate;
@@ -98,3 +100,4 @@ public static class LinuxProcessRunner
         return null;
     }
 }
+

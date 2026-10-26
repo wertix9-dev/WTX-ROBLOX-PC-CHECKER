@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using WtxPcCheck.Linux.Models;
 using WtxPcCheck.Linux.ViewModels;
 
@@ -17,12 +18,25 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         Opened += async (_, _) => await _viewModel.HandleStartupAsync();
-        Closing += (_, _) => _viewModel.Dispose();
+        _viewModel.PropertyChanged += ViewModel_OnPropertyChanged;
+        Closing += (_, _) => { _viewModel.PropertyChanged -= ViewModel_OnPropertyChanged; _viewModel.Dispose(); };
         var findingsFilterList = this.FindControl<ListBox>("FindingsFilterList");
         if (findingsFilterList is not null) findingsFilterList.SelectedIndex = 0;
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private void ViewModel_OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainViewModel.SelectedNav)) return;
+        if (_viewModel.EffectiveReduceMotion)
+        {
+            PagesGrid.Opacity = 1;
+            return;
+        }
+        PagesGrid.Opacity = 0;
+        Dispatcher.UIThread.Post(() => PagesGrid.Opacity = 1, DispatcherPriority.Background);
+    }
 
     private void FindingsFilter_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
@@ -54,4 +68,5 @@ public partial class MainWindow : Window
             _viewModel.OpenProcessLocationCommand.Execute(process);
     }
 }
+
 

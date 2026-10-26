@@ -15,7 +15,7 @@ public partial class SplashWindow : Window
     private readonly TextBlock? _detailText;
     private readonly DispatcherTimer _timer;
     private double _angle;
-    private readonly bool _reduceMotion;
+    private bool _reduceMotion;
 
     public SplashWindow(bool reduceMotion)
     {
@@ -39,10 +39,18 @@ public partial class SplashWindow : Window
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
+    public void SetReducedMotion(bool reduceMotion)
+    {
+        _reduceMotion = reduceMotion;
+        if (reduceMotion) _timer.Stop();
+        else if (IsVisible) _timer.Start();
+    }
+
     public void SetStatus(string status, string? detail = null)
     {
         if (_statusText is not null) _statusText.Text = status;
         if (detail is not null && _detailText is not null) _detailText.Text = detail;
     }
 }
+
 

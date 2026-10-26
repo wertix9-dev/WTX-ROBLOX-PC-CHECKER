@@ -23,6 +23,7 @@ public partial class App : Application
             splash.SetStatus("Loading settings...", "Reading local preferences only. No scan data is loaded.");
             await Task.Yield();
             var settings = await Task.Run(() => new LinuxSettingsService().Load());
+            splash.SetReducedMotion(settings.ReduceMotion);
             var configuration = new LinuxUpdateConfiguration();
             if (!configuration.IsConfigured)
                 splash.SetStatus("Update source not configured.", "Continuing offline. Signed updates can be configured by the maintainer.");
@@ -41,3 +42,4 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 }
+

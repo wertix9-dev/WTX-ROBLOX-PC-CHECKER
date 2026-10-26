@@ -64,7 +64,12 @@
         </Border>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-          <Grid>
+          <Grid x:Name="PagesGrid" Opacity="1">
+          <Grid.Transitions>
+            <Transitions>
+              <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+            </Transitions>
+          </Grid.Transitions>
           <!-- DASHBOARD -->
           <StackPanel Margin="26,22,26,30" Spacing="14" IsVisible="{Binding IsDashboardPage}">
             <StackPanel Spacing="4">
@@ -348,7 +353,7 @@
                     <TextBlock Text="{Binding ScanElapsedText}" />
                   </StackPanel>
                 </Grid>
-                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding ShowScanActivity}" />
                 <Grid ColumnDefinitions="*,*,*,*">
                   <StackPanel><TextBlock Text="{Binding FilesCheckedText}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="FILES CHECKED" Classes="small"/></StackPanel>
                   <StackPanel Grid.Column="1"><TextBlock Text="{Binding FindingCountText}" FontSize="24" FontWeight="SemiBold" Foreground="#E8B04B"/><TextBlock Text="ITEMS TO REVIEW" Classes="small"/></StackPanel>
@@ -681,5 +686,7 @@
     </Grid>
   </Grid>
 </Window>
+
+
 
 

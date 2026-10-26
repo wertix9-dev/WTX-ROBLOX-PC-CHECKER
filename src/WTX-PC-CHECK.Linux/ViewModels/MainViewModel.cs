@@ -461,6 +461,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(IsScanning));
             OnPropertyChanged(nameof(IsBusy));
             OnPropertyChanged(nameof(ScanActivityActive));
+            OnPropertyChanged(nameof(ShowScanActivity));
             OnPropertyChanged(nameof(ScanStatusLabel));
             OnPropertyChanged(nameof(PcStatusLabel));
             OnPropertyChanged(nameof(PcStatusDetail));
@@ -481,6 +482,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             if (!SetProperty(ref _isPaused, value)) return;
             OnPropertyChanged(nameof(ScanActivityActive));
+            OnPropertyChanged(nameof(ShowScanActivity));
             OnPropertyChanged(nameof(ScanStatusLabel));
             OnPropertyChanged(nameof(PcStatusLabel));
             OnPropertyChanged(nameof(PcStatusDetail));
@@ -491,6 +493,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     public bool ScanActivityActive => IsScanning && !IsPaused;
+    public bool ShowScanActivity => IsScanning && !IsPaused && !EffectiveReduceMotion;
     public bool HasScanOutcome { get => _hasScanOutcome; private set { if (SetProperty(ref _hasScanOutcome, value)) OnPropertyChanged(nameof(ShowResults)); } }
     public bool ShowResults => HasScanOutcome || Findings.Count > 0;
     public long FilesChecked { get => _filesChecked; private set { if (SetProperty(ref _filesChecked, value)) OnPropertyChanged(nameof(FilesCheckedText)); } }
@@ -1203,5 +1206,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _updateService.Dispose();
     }
 }
+
 
 

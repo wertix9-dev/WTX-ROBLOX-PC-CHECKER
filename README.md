@@ -1,10 +1,12 @@
-# WTX PC CHECK
+﻿# WTX PC CHECK
 
 **Made by WERTIX**
 
-WTX PC CHECK is a defensive, local PC-check application for Windows 10 version 22H2 and Windows 11 on x64. It helps users review selected locations for Roblox executor indicators, Minecraft cheat-client indicators and mods, and signs of malware, including trojans. It is built to support a safer, fairer gaming community.
+WTX PC CHECK is a defensive, local PC-check application for Windows 10 version 22H2, Windows 11, and Linux x64 (Bazzite/Kali targets, best-effort elsewhere). It helps users review selected locations for Roblox executor indicators, Minecraft cheat-client indicators and mods, and signs of malware, including trojans. It is built to support a safer, fairer gaming community.
 
-The application is built with C#, WPF, and .NET 10. It does not execute, modify, delete, move, or quarantine discovered files, and it never guarantees that a PC is clean.
+The Windows client keeps its tested WPF interface. The Linux client uses a new Avalonia presentation layer and shares the scanner core, models, JAR analysis, indicator database, and privacy behavior. See [README-Linux.md](README-Linux.md) for Linux details.
+
+The application is built with C#, .NET 10, WPF on Windows, and Avalonia on Linux. It does not execute, modify, delete, move, or quarantine discovered files, and it never guarantees that a PC is clean.
 
 GitHub repository name from the project setup: **WTX ROBLOX PC CHECKER**.
 
@@ -24,10 +26,23 @@ It is self-contained for Windows x64; the user does not need to install .NET or 
 
 Delivered binary for this build:
 
-- **Size:** 61,609,057 bytes (58.8 MB)
-- **SHA-256:** `B5A12ECAEC2411BA6E3EB24DDA5E3ED6499F9E0603C139618802FC22422EB3D6`
+- **Size:** 61,608,757 bytes (58.8 MB)
+- **SHA-256:** `A2AC9DE986712851122C54455BDE20855FB79D611073A89A74FB9A09AADF3588`
 
 The delivered EXE is not Authenticode-signed because no code-signing certificate or key was provided. Windows SmartScreen may warn about an unknown publisher. Update packages themselves are still rejected unless they have a valid signature from the configured pinned publisher certificate.
+
+### Linux packages
+
+Actual Linux packages built for this release (self-contained Linux x64):
+
+- **AppImage:** `publish/linux/packages/WTX-PC-CHECK-1.2.0-x86_64.AppImage`  
+  SHA-256: `CB73960BF62E6B3F50B51B8F5C58B1462E849CBB8CD7064A59BAE1021261255B`
+- **Portable archive:** `publish/linux/packages/WTX-PC-CHECK-1.2.0-linux-x64.tar.gz`  
+  SHA-256: `891DB846FECAF2D6774EE1544C66B3DA9FB4B8C5064D813771288295A4D11ED1`
+- **Debian/Kali package:** `publish/linux/packages/wtx-pc-check_1.2.0_amd64.deb`  
+  SHA-256: `FD0BBD4B8CE0EB937B54DE57FAB14A3D5CC5A2A5130940653BA7E8139C7554E0`
+
+The AppImage is recommended for Bazzite. Do not use `rpm-ostree` layering. See [README-Linux.md](README-Linux.md) for installation, dependencies, X11/XWayland notes, and limits.
 
 ## Build from source
 
@@ -55,6 +70,23 @@ Output:
 
 The build is a single-file, self-contained publish. `IncludeNativeLibrariesForSelfExtract` is required by WPF's native components; .NET extracts those native files to a temporary directory at start-up.
 
+### Build the Linux client and packages
+
+The reproducible Linux packager is `.github/workflows/linux-build.yml` (GitHub Actions, Ubuntu 24.04). It publishes the Linux x64 self-contained app, runs the Linux self-test, builds the AppImage, tar.gz, and `.deb`, and runs Xvfb GUI startup smoke tests for the AppImage and installed `.deb`.
+
+Manual Linux build:
+
+```bash
+dotnet publish src/WTX-PC-CHECK.Linux/WTX-PC-CHECK.Linux.csproj \
+  -c Release -r linux-x64 --self-contained true \
+  -p:PublishSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true \
+  -p:EnableCompressionInSingleFile=true \
+  -o publish/linux/app
+```
+
+The AppDir/AppImage/deb steps are in the workflow. See [README-Linux.md](README-Linux.md) for the full Linux handoff.
+
 ## Navigation and start-up
 
 - Animated start-up screen with **WTX PC CHECK**, **Made by WERTIX**, a lightweight scan ring, and real English status messages such as **Loading settings...** and **Checking for updates...**.
@@ -78,14 +110,14 @@ Users can select individual categories:
 - Lua and Luau script review
 - Minecraft JAR files and mod folders
 - Known Minecraft cheat-client indicators
-- Windows security, startup entries, and running processes
+- Windows security, startup entries, and running processes (Linux security, startup, and processes on Linux)
 
 Users can select locations before starting:
 
 - Fixed, removable, and network drives. Full PC Scan selects all fixed drives by default; any drive can be deselected.
 - Common user folders: Downloads, Desktop, and temporary files.
 - Detected game/launcher folders. These are displayed with labels and paths and included only when checked.
-- Custom folders added through the Windows folder picker.
+- Custom folders added through the native folder picker (Windows or Linux).
 
 The profile card explains exactly which categories and locations will be checked. A privacy confirmation is shown before every scan.
 
@@ -218,6 +250,10 @@ The updater validates all of the following: newer manifest version, HTTPS downlo
 
 Windows code-signing credentials are not part of this repository and must not be committed.
 
+### Linux updater
+
+The Linux updater uses a separate configured HTTPS manifest, a detached OpenPGP signature, and a pinned OpenPGP fingerprint. It is disabled while `src/WTX-PC-CHECK.Linux/Services/LinuxUpdateModels.cs` contains placeholders. Only a user-owned AppImage is replaced, after signature verification and an explicit restart confirmation. `.deb` and archive installations are never silently replaced; update them through the package manager or replace the archive manually. No scan data is sent.
+
 ## Indicator database
 
 `src/WTX-PC-CHECK/Data/KnownIndicators.json` contains the local Roblox, Minecraft, proxy-DLL, and Lua heuristic lists. No verified malware hashes are bundled. Add only independently verified SHA-256 entries and rebuild. Name and metadata rules are heuristics, so keep their explanations and limitations intact.
@@ -225,7 +261,10 @@ Windows code-signing credentials are not part of this repository and must not be
 ## Project layout
 
 ```
-src/WTX-PC-CHECK/                 WPF source
+src/WTX-PC-CHECK/                 WPF Windows source
+src/WTX-PC-CHECK.Linux/           Avalonia Linux source
+packaging/linux/                  .desktop, AppRun, icon
+.github/workflows/linux-build.yml Linux CI packager and smoke tests
   Assets/AppIcon.ico
   Data/KnownIndicators.json
   Models/                        settings, findings, security, updates
@@ -236,13 +275,16 @@ src/WTX-PC-CHECK/                 WPF source
   MainWindow.xaml(.cs)
   Program.cs                     entry point and self-test mode
   SelfTest.cs
-publish/WTX-PC-CHECK.exe          self-contained single-file build
+publish/WTX-PC-CHECK.exe          Windows self-contained single-file build
+publish/linux/packages/           AppImage, tar.gz, and .deb (generated)
 build.ps1                         publish script
 ```
 
 ## Verification
 
-The self-test covers version comparison, update configuration rejection, SHA-256 hashing, Authenticode verification, indicator loading, Roblox/Lua scan behavior, static Minecraft JAR analysis and classifications, inaccessible-root reporting, cancellation, safe Lua preview, disabled update source, rejection of unverified staged updates, and update-helper script parsing.
+The Windows self-test covers version comparison, update configuration rejection, SHA-256 hashing, Authenticode verification, indicator loading, Roblox/Lua scan behavior, static Minecraft JAR analysis and classifications, inaccessible-root reporting, cancellation, safe Lua preview, disabled update source, rejection of unverified staged updates, and update-helper script parsing.
+
+The Linux self-test runs in CI and covers the shared scan engine, a Roblox Lua fixture, a Minecraft JAR fixture, and the honest Linux signature policy. The Linux packager also runs Xvfb GUI startup smoke tests for both the AppImage and the installed `.deb`.
 
 Manual checks during development included:
 
@@ -258,6 +300,13 @@ Manual checks during development included:
 
 A complete all-drive scan was not run during validation because it is long-running. A real signed network update was not exercised because no real update URL, publisher certificate, or signing key was provided. Defender detection-record parsing is implemented but was not triggered against live malware during validation.
 
+Linux packages were built on Ubuntu 24.04 in GitHub Actions and the AppImage and installed `.deb` passed Xvfb GUI startup smoke tests. Bazzite and Kali were not available as live test machines, so their runtime compatibility is a documented target rather than a verified claim. Native Wayland was not tested; the Linux client uses X11/XWayland where available.
+
 ## Attribution
 
-Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET/WPF runtime.
+Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET, WPF, and Avalonia runtimes.
+
+
+
+
+
