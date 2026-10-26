@@ -1,0 +1,53 @@
+﻿name: Linux preview screenshot
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install screenshot tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool imagemagick x11-apps curl
+
+      - name: Download release AppImage
+        run: |
+          curl -L --fail --retry 3 -o WTX-PC-CHECK.AppImage "https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/download/v1.2.0/WTX-PC-CHECK-1.2.0-x86_64.AppImage"
+          chmod +x WTX-PC-CHECK.AppImage
+          mkdir -p docs/previews artifacts
+
+      - name: Capture Linux dashboard
+        run: |
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export XDG_RUNTIME_DIR="$(mktemp -d)"
+          xvfb-run -a --server-args="-screen 0 1440x900x24" bash -c '
+            set -e
+            "$0" & app=$!
+            wid=""
+            for i in $(seq 1 40); do
+              candidates=$(xdotool search --onlyvisible --name "WTX PC CHECK" 2>/dev/null || true)
+              for candidate in $candidates; do
+                eval "$(xdotool getwindowgeometry --shell "$candidate")"
+                if [ "${WIDTH:-0}" -gt 900 ]; then wid="$candidate"; break 2; fi
+              done
+              sleep 1
+            done
+            if [ -z "$wid" ]; then echo "main window not found"; kill $app 2>/dev/null || true; exit 1; fi
+            sleep 7
+            import -window "$wid" docs/previews/linux-dashboard.png
+            xdotool getwindowgeometry "$wid"
+            kill $app 2>/dev/null || true
+          ' "$PWD/WTX-PC-CHECK.AppImage"
+          identify docs/previews/linux-dashboard.png
+
+      - name: Upload preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: wtx-linux-preview
+          path: docs/previews/linux-dashboard.png
+          if-no-files-found: error
