@@ -1,4 +1,4 @@
-﻿# WTX PC CHECK for Linux
+# WTX PC CHECK for Linux
 
 **Made by WERTIX**
 
@@ -10,9 +10,9 @@ Actual Linux packages built for this release:
 
 | Package | Path | SHA-256 |
 |---|---|---|
-| AppImage (recommended for Bazzite) | `publish/linux/packages/WTX-PC-CHECK-1.2.0-x86_64.AppImage` | `CB73960BF62E6B3F50B51B8F5C58B1462E849CBB8CD7064A59BAE1021261255B` |
-| Portable archive (any x64 distro) | `publish/linux/packages/WTX-PC-CHECK-1.2.0-linux-x64.tar.gz` | `891DB846FECAF2D6774EE1544C66B3DA9FB4B8C5064D813771288295A4D11ED1` |
-| Debian package (Kali and compatible) | `publish/linux/packages/wtx-pc-check_1.2.0_amd64.deb` | `FD0BBD4B8CE0EB937B54DE57FAB14A3D5CC5A2A5130940653BA7E8139C7554E0` |
+| AppImage (recommended for Bazzite) | `publish/linux/packages/WTX-PC-CHECK-1.2.0-x86_64.AppImage` | `DFD75CA5BD384F30882404CA87410CEECFD2ED03B7D0B599334C9943E5FCC724` |
+| Portable archive (any x64 distro) | `publish/linux/packages/WTX-PC-CHECK-1.2.0-linux-x64.tar.gz` | `8F6DEBF71234893BF2AB15FA9A87E612307D2D682E22BD95E5C09BD37BC78CFB` |
+| Debian package (Kali and compatible) | `publish/linux/packages/wtx-pc-check_1.2.0_amd64.deb` | `81273AB7BF653A889AAF0A07F3B95F8F2B33ADC4169795C8DBCE8F78C27EC3CF` |
 
 AppImage:
 

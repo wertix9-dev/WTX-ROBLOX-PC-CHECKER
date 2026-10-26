@@ -1,4 +1,4 @@
-﻿# WTX PC CHECK
+# WTX PC CHECK
 
 **Made by WERTIX**
 
@@ -36,11 +36,11 @@ The delivered EXE is not Authenticode-signed because no code-signing certificate
 Actual Linux packages built for this release (self-contained Linux x64):
 
 - **AppImage:** `publish/linux/packages/WTX-PC-CHECK-1.2.0-x86_64.AppImage`  
-  SHA-256: `CB73960BF62E6B3F50B51B8F5C58B1462E849CBB8CD7064A59BAE1021261255B`
+  SHA-256: `DFD75CA5BD384F30882404CA87410CEECFD2ED03B7D0B599334C9943E5FCC724`
 - **Portable archive:** `publish/linux/packages/WTX-PC-CHECK-1.2.0-linux-x64.tar.gz`  
-  SHA-256: `891DB846FECAF2D6774EE1544C66B3DA9FB4B8C5064D813771288295A4D11ED1`
+  SHA-256: `8F6DEBF71234893BF2AB15FA9A87E612307D2D682E22BD95E5C09BD37BC78CFB`
 - **Debian/Kali package:** `publish/linux/packages/wtx-pc-check_1.2.0_amd64.deb`  
-  SHA-256: `FD0BBD4B8CE0EB937B54DE57FAB14A3D5CC5A2A5130940653BA7E8139C7554E0`
+  SHA-256: `81273AB7BF653A889AAF0A07F3B95F8F2B33ADC4169795C8DBCE8F78C27EC3CF`
 
 The AppImage is recommended for Bazzite. Do not use `rpm-ostree` layering. See [README-Linux.md](README-Linux.md) for installation, dependencies, X11/XWayland notes, and limits.
 
