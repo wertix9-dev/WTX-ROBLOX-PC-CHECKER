@@ -36,11 +36,11 @@ The delivered EXE is not Authenticode-signed because no code-signing certificate
 Actual Linux packages built for this release (self-contained Linux x64):
 
 - **AppImage:** `publish/linux/packages/WTX-PC-CHECK-1.2.0-x86_64.AppImage`  
-  SHA-256: `DFD75CA5BD384F30882404CA87410CEECFD2ED03B7D0B599334C9943E5FCC724`
+  SHA-256: `E2C90CA7FA9E4AE46696C1EDB8B2DB028A20F77CA427731679092F68910AA381`
 - **Portable archive:** `publish/linux/packages/WTX-PC-CHECK-1.2.0-linux-x64.tar.gz`  
-  SHA-256: `8F6DEBF71234893BF2AB15FA9A87E612307D2D682E22BD95E5C09BD37BC78CFB`
+  SHA-256: `81EAEDA3E37F661519D11708B20A99F82D665B35C7CFBA7ADF72D8C2378FD880`
 - **Debian/Kali package:** `publish/linux/packages/wtx-pc-check_1.2.0_amd64.deb`  
-  SHA-256: `81273AB7BF653A889AAF0A07F3B95F8F2B33ADC4169795C8DBCE8F78C27EC3CF`
+  SHA-256: `2E758F0E7DFD465B21A2C42AB72FC57FBF91C2FF56A829BC8B91C3B2582504BB`
 
 The AppImage is recommended for Bazzite. Do not use `rpm-ostree` layering. See [README-Linux.md](README-Linux.md) for installation, dependencies, X11/XWayland notes, and limits.
 
