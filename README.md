@@ -1,4 +1,4 @@
-# WTX PC CHECK
+﻿# WTX PC CHECK
 
 **Made by WERTIX**
 
@@ -43,6 +43,8 @@ Actual Linux packages built for this release (self-contained Linux x64):
   SHA-256: `2E758F0E7DFD465B21A2C42AB72FC57FBF91C2FF56A829BC8B91C3B2582504BB`
 
 The AppImage is recommended for Bazzite. Do not use `rpm-ostree` layering. See [README-Linux.md](README-Linux.md) for installation, dependencies, X11/XWayland notes, and limits.
+
+**GitHub release downloads:** https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/tag/v1.2.0
 
 ## Build from source
 
@@ -305,6 +307,7 @@ Linux packages were built on Ubuntu 24.04 in GitHub Actions and the AppImage and
 ## Attribution
 
 Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET, WPF, and Avalonia runtimes.
+
 
 
 

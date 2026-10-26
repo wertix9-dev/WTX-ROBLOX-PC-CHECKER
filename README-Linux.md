@@ -1,4 +1,4 @@
-# WTX PC CHECK for Linux
+﻿# WTX PC CHECK for Linux
 
 **Made by WERTIX**
 
@@ -6,7 +6,7 @@ WTX PC CHECK is a local, defensive PC checker for Linux x64. It keeps the existi
 
 ## Download and run
 
-Actual Linux packages built for this release:
+Actual Linux packages built for this release. Downloads: https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/tag/v1.2.0
 
 | Package | Path | SHA-256 |
 |---|---|---|
@@ -124,3 +124,4 @@ Self-test:
 ```bash
 ./publish/linux/app/WTX-PC-CHECK --self-test ./linux-selftest.txt
 ```
+
