@@ -1,4 +1,10 @@
-﻿# WTX PC CHECK
+﻿![C#](https://img.shields.io/badge/C%23-.NET%2010-512BD4?style=flat-square&logo=dotnet)
+![Windows](https://img.shields.io/badge/Windows-10%2022H2%20%7C%2011-0078D4?style=flat-square&logo=windows)
+![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20Bazzite%20%7C%20Kali-FCC624?style=flat-square&logo=linux&logoColor=111111)
+![Avalonia](https://img.shields.io/badge/UI-Avalonia%20%2B%20WPF-8B44AC?style=flat-square)
+![English UI](https://img.shields.io/badge/UI%20language-English-2FD4C4?style=flat-square)
+
+# WTX PC CHECK
 
 **Made by WERTIX**
 
@@ -9,6 +15,30 @@ The Windows client keeps its tested WPF interface. The Linux client uses a new A
 The application is built with C#, .NET 10, WPF on Windows, and Avalonia on Linux. It does not execute, modify, delete, move, or quarantine discovered files, and it never guarantees that a PC is clean.
 
 GitHub repository name from the project setup: **WTX ROBLOX PC CHECKER**.
+
+## Preview
+
+Real application captures from the delivered builds. Windows previews come from `WTX-PC-CHECK.exe`; the Linux preview comes from the packaged AppImage running under X11.
+
+| Windows dashboard (WPF) | Windows scan setup (WPF) |
+|---|---|
+| ![Windows dashboard](docs/previews/windows-dashboard.png) | ![Windows scan setup](docs/previews/windows-scan.png) |
+
+| Privacy confirmation before scanning | Linux dashboard (Avalonia) |
+|---|---|
+| ![Windows privacy confirmation](docs/previews/windows-privacy.png) | ![Linux dashboard](docs/previews/linux-dashboard.png) |
+
+### Languages and platform
+
+| Area | Language / framework |
+|---|---|
+| User interface | English only |
+| Windows application | C# and XAML, WPF, .NET 10 |
+| Linux application | C# and XAML, Avalonia UI, .NET 10 |
+| Windows helper tooling | PowerShell |
+| Linux packaging | Bash, YAML, AppImage/deb tooling |
+
+GitHub's repository language bar primarily reports C# because the scanner engine, models, services, and both presentation codebases are C#.
 
 ## Run the published application
 
@@ -307,6 +337,8 @@ Linux packages were built on Ubuntu 24.04 in GitHub Actions and the AppImage and
 ## Attribution
 
 Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET, WPF, and Avalonia runtimes.
+
+
 
 
 
