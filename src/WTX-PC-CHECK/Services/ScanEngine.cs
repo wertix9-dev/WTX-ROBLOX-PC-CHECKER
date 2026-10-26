@@ -28,7 +28,8 @@ public sealed class ScanEngine
         ScanRequest request,
         IProgress<ScanProgress>? progress,
         IProgress<ScanFinding>? findingProgress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ScanPauseController? pause = null)
     {
         var outcome = new ScanOutcome
         {
@@ -58,8 +59,10 @@ public sealed class ScanEngine
                 InaccessibleCount = outcome.InaccessibleTotal,
                 Elapsed = stopwatch.Elapsed,
                 LuaFilesChecked = outcome.LuaFilesChecked,
+                JarFilesChecked = outcome.JarFilesChecked,
                 ReparsePointsSkipped = outcome.ReparsePointsSkipped,
-                CloudFilesSkipped = outcome.CloudFilesSkipped
+                CloudFilesSkipped = outcome.CloudFilesSkipped,
+                Paused = pause?.IsPaused == true
             });
         }
 
@@ -68,6 +71,7 @@ public sealed class ScanEngine
             while (stack.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                pause?.WaitIfPaused(cancellationToken);
                 var directoryPath = stack.Pop();
                 outcome.DirectoriesChecked++;
                 Report(directoryPath);
@@ -78,6 +82,7 @@ public sealed class ScanEngine
                     foreach (var entry in directory.EnumerateFileSystemInfos("*", EnumOptions))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+                        pause?.WaitIfPaused(cancellationToken);
                         FileAttributes attributes;
                         try
                         {
@@ -104,7 +109,7 @@ public sealed class ScanEngine
                         outcome.FilesChecked++;
                         try
                         {
-                            AnalyzeFile(file, attributes, directoryPath, request, outcome, findingProgress, cancellationToken);
+                            AnalyzeFile(file, attributes, directoryPath, request, outcome, findingProgress, cancellationToken, pause);
                         }
                         catch (OperationCanceledException)
                         {
@@ -152,15 +157,26 @@ public sealed class ScanEngine
         ScanRequest request,
         ScanOutcome outcome,
         IProgress<ScanFinding>? findingProgress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ScanPauseController? pause = null)
     {
         var path = file.FullName;
         var isPe = FileRules.IsPeFile(path);
         var isLua = FileRules.IsLuaFile(path);
-        if (!isPe && !isLua) return;
+        var isJar = FileRules.IsJarFile(path);
+        if (!isPe && !isLua && !isJar) return;
+        if (isPe && !request.ScanRobloxExecutables) return;
+        if (isLua && !request.ScanLuaScripts) return;
+        if (isJar && !request.ScanMinecraftJars && !request.DetectMinecraftCheatIndicators) return;
 
         if (isPe) outcome.PeFilesChecked++;
         if (isLua) outcome.LuaFilesChecked++;
+        if (isJar)
+        {
+            outcome.JarFilesChecked++;
+            AnalyzeJar(file, attributes, path, request, outcome, findingProgress, cancellationToken);
+            return;
+        }
 
         var cloudOnly = FileRules.IsCloudOnly(attributes);
         var reparseFile = attributes.HasFlag(FileAttributes.ReparsePoint);
@@ -307,6 +323,10 @@ public sealed class ScanEngine
             : "Local static inspection of file name, folder path, metadata, and digital signature" +
               (_indicators.HasKnownHashes ? ", plus SHA-256 hash comparison against the local indicator list." : ". No known-hash list is configured in this build.");
 
+        var confidence = risk == RiskLevel.High
+            ? ConfidenceLevel.High
+            : evidence.Count >= 2 || proxyHit ? ConfidenceLevel.Medium : ConfidenceLevel.Low;
+
         var finding = new ScanFinding
         {
             FileName = file.Name,
@@ -316,6 +336,9 @@ public sealed class ScanEngine
             DetectionMethod = detection,
             Limitations = string.Join(" ", limitations.Distinct()),
             Category = category,
+            Classification = FindingClassification.PotentiallySuspicious,
+            Confidence = confidence,
+            Evidence = string.Join(" ", evidence.Distinct()),
             Risk = risk,
             SizeBytes = file.Length,
             ModifiedUtc = file.LastWriteTimeUtc,
@@ -333,6 +356,168 @@ public sealed class ScanEngine
         findingProgress?.Report(finding);
     }
 
+
+    private void AnalyzeJar(
+        FileInfo file,
+        FileAttributes attributes,
+        string path,
+        ScanRequest request,
+        ScanOutcome outcome,
+        IProgress<ScanFinding>? findingProgress,
+        CancellationToken cancellationToken)
+    {
+        var cloudOnly = FileRules.IsCloudOnly(attributes);
+        var reparseFile = attributes.HasFlag(FileAttributes.ReparsePoint);
+        if (cloudOnly) outcome.CloudFilesSkipped++;
+        if (cloudOnly || reparseFile)
+        {
+            outcome.ArchiveIssueTotal++;
+            if (outcome.ArchiveIssues.Count < 500)
+                outcome.ArchiveIssues.Add(new ArchiveIssue
+                {
+                    Path = path,
+                    Reason = cloudOnly
+                        ? "The archive is a cloud-only placeholder; its contents were not downloaded."
+                        : "The archive is a reparse point/link and was not opened."
+                });
+            return;
+        }
+
+        var result = MinecraftJarAnalyzer.Analyze(
+            path,
+            _indicators,
+            request.MaxArchiveBytes,
+            request.MaxArchiveEntries,
+            request.MaxArchiveMetadataBytes,
+            cancellationToken);
+
+        if (result.Opened) outcome.MinecraftArchivesInspected++;
+        else
+        {
+            outcome.ArchiveIssueTotal++;
+            if (outcome.ArchiveIssues.Count < 500)
+                outcome.ArchiveIssues.Add(new ArchiveIssue
+                {
+                    Path = path,
+                    Reason = result.FailureReason ?? "The archive could not be inspected."
+                });
+        }
+
+        var knownMatch = request.DetectMinecraftCheatIndicators && result.AnyKnownMatch;
+        var modsContext = FileRules.IsMinecraftModsPath(path);
+        var review = request.ReviewMinecraftJars && result.Opened && (modsContext || result.HasModMetadata);
+        if (!knownMatch && !review) return;
+        if (!result.Opened && !knownMatch) return;
+
+        var evidence = new List<string>(result.Evidence);
+        var limitations = new List<string>
+        {
+            "JAR files are inspected as ZIP metadata and selected text entries. Class bytecode is not executed, decompiled, or extracted to disk.",
+            "Known cheat-client names and metadata are indicators, not proof of malware. Unknown mods are not automatically malicious."
+        };
+        FindingClassification classification;
+        RiskLevel risk;
+        ConfidenceLevel confidence;
+        string explanation;
+        string? matchedRule = null;
+
+        if (knownMatch)
+        {
+            var metadataConfirmed = result.MetadataMatch || result.EntryNameMatch;
+            classification = metadataConfirmed
+                ? FindingClassification.KnownCheatClient
+                : FindingClassification.PotentiallySuspicious;
+            risk = metadataConfirmed ? RiskLevel.Medium : RiskLevel.Low;
+            confidence = metadataConfirmed ? ConfidenceLevel.Medium : ConfidenceLevel.Low;
+            matchedRule = result.MatchProduct is null ? "Minecraft cheat-client indicator" : $"Minecraft: {result.MatchProduct}";
+            explanation = metadataConfirmed
+                ? "This archive's metadata or entry names match a known Minecraft cheat-client indicator. That is evidence that the archive is associated with a cheat client, but it is not proof of malware. Cheat clients may violate server rules and can carry unsafe code."
+                : "The archive file name matches a known Minecraft cheat-client name. The archive itself could not be fully inspected or did not confirm the match. A name alone is not proof.";
+        }
+        else if (result.HasModMetadata)
+        {
+            classification = FindingClassification.LikelyLegitimateMod;
+            risk = RiskLevel.Info;
+            confidence = ConfidenceLevel.Low;
+            explanation = "This archive contains recognizable Minecraft mod metadata and no known cheat-client indicator was found in the inspected metadata or entry names. That makes it likely to be a legitimate mod, but it is not a safety guarantee.";
+            evidence.Add("No known Minecraft cheat-client token was found in the inspected metadata or entry names.");
+        }
+        else
+        {
+            classification = FindingClassification.UnknownFile;
+            risk = RiskLevel.Low;
+            confidence = ConfidenceLevel.Low;
+            explanation = "This archive is in a Minecraft-related location but has no recognizable mod metadata and no known cheat-client indicator. Unknown does not mean malicious; review its source if you do not recognize it.";
+            evidence.Add("No recognizable Minecraft mod metadata was found in the inspected entries.");
+        }
+
+        var hash = (string?)null;
+        string? hashNote = null;
+        if (file.Length <= HashService.MaxHashBytes)
+        {
+            var hashResult = HashService.TryComputeSha256(path, file.Length, cancellationToken);
+            outcome.HashChecksPerformed++;
+            if (hashResult.Success) hash = hashResult.Sha256;
+            else hashNote = hashResult.Note;
+        }
+        else
+        {
+            hashNote = "Hash not computed because the archive is larger than 256 MB.";
+        }
+
+        if (outcome.Findings.Count >= request.MaxFindings ||
+            (review && outcome.MinecraftModsReviewed >= request.MaxMinecraftReviewFindings))
+        {
+            outcome.FindingLimitReached = true;
+            return;
+        }
+
+        if (result.Opened)
+        {
+            var mode = result.HasModMetadata
+                ? $"{result.ModLoader ?? "Minecraft"} metadata{(string.IsNullOrWhiteSpace(result.ModName) ? "" : $" for “{result.ModName}”")}"
+                : "no recognized mod metadata";
+            evidence.Add($"Static archive inspection: {result.EntryCount:N0} entries, {AppFormat.Bytes(result.UncompressedBytes)} uncompressed, {mode}.");
+        }
+        else
+        {
+            limitations.Add("The archive could not be fully inspected; only its file name was reviewed.");
+        }
+        if (result.HasJavaSignatureEntries)
+            evidence.Add("Java signature entries are present but were not cryptographically verified.");
+
+        limitations.Add("The inspection does not prove that an archive is safe or unsafe. Obfuscation, encrypted entries, and behavior only visible at runtime can hide intent.");
+        if (result.HasJavaSignatureEntries)
+            limitations.Add("Java signature metadata is reported as present only; WTX PC CHECK does not verify Java signing chains.");
+
+        var finding = new ScanFinding
+        {
+            FileName = file.Name,
+            FullPath = path,
+            FileType = "Minecraft archive (.jar)",
+            Explanation = explanation,
+            DetectionMethod = "Static, read-only ZIP/JAR inspection of metadata, selected text entries, entry names, and Java signature metadata. No extraction or execution.",
+            Limitations = string.Join(" ", limitations.Distinct()),
+            Category = FindingCategory.MinecraftReview,
+            Classification = classification,
+            Confidence = confidence,
+            Evidence = string.Join(" ", evidence.Distinct()),
+            Risk = risk,
+            SizeBytes = file.Length,
+            ModifiedUtc = file.LastWriteTimeUtc,
+            Signature = SignatureInfo.NotChecked(result.HasJavaSignatureEntries
+                ? "Java signature entries are present but not cryptographically verified. Authenticode is not applicable to JAR files."
+                : "No Java signature entries were found. Authenticode is not applicable to JAR files."),
+            Sha256 = hash,
+            HashNote = hashNote,
+            MatchedRule = matchedRule,
+            IsArchive = true
+        };
+
+        if (review) outcome.MinecraftModsReviewed++;
+        outcome.Findings.Add(finding);
+        findingProgress?.Report(finding);
+    }
     private static string BuildExplanation(bool isPe, bool isLua, FindingCategory category, bool proxyHit)
     {
         if (category == FindingCategory.MalwareIndicator)
@@ -382,3 +567,8 @@ public sealed class ScanEngine
         });
     }
 }
+
+
+
+
+

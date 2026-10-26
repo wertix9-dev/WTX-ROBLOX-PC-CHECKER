@@ -60,6 +60,13 @@ public enum DefenderScanState
     NotAvailable
 }
 
+public sealed class DefenderDetection
+{
+    public required string ThreatId { get; init; }
+    public DateTimeOffset? DetectedUtc { get; init; }
+    public List<string> Resources { get; init; } = [];
+}
+
 public sealed class DefenderScanResult
 {
     public DefenderScanState State { get; init; } = DefenderScanState.Idle;
@@ -71,5 +78,8 @@ public sealed class DefenderScanResult
         ? TimeSpan.Zero
         : CompletedUtc.Value - StartedUtc.Value;
     public bool QuickScan { get; init; }
+    public List<DefenderDetection> Detections { get; init; } = [];
+    public bool DetectionDetailsAvailable { get; init; }
 }
+
 

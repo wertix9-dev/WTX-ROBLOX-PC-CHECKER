@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using System.IO;
 using WtxPcCheck.Models;
 
@@ -111,6 +112,14 @@ public sealed class DefenderScanService
         }
 
         var ended = DateTimeOffset.UtcNow;
+        var detections = new List<DefenderDetection>();
+        var detectionDetailsAvailable = false;
+        if (!cancelled && nonZero > 0)
+        {
+            var query = await TryGetRecentDetectionsAsync(started, cancellationToken).ConfigureAwait(false);
+            detections = query.Detections;
+            detectionDetailsAvailable = query.Available;
+        }
         if (cancelled)
         {
             return new DefenderScanResult
@@ -139,10 +148,16 @@ public sealed class DefenderScanService
             return new DefenderScanResult
             {
                 State = DefenderScanState.ThreatsFound,
-                Summary = $"Windows Defender returned a non-zero result for {nonZero} of {roots.Count} selected drive{(roots.Count == 1 ? "" : "s")}. This can mean malware was detected or that the scan reported an error. WTX PC CHECK did not change, remove, or quarantine any file. Open Windows Security to review Defender's own result.",
+                Summary = $"Windows Defender returned a non-zero result for {nonZero} of {roots.Count} selected drive{(roots.Count == 1 ? "" : "s")}. " +
+                          (detections.Count > 0
+                              ? $"Windows Security recorded {detections.Count} detection resource{(detections.Count == 1 ? "" : "s")}; they are listed as separate findings."
+                              : "Defender detection details could not be read. Open Windows Security to review the result.") +
+                          " WTX PC CHECK did not change, remove, or quarantine any file.",
                 StartedUtc = started,
                 CompletedUtc = ended,
-                ExitCode = 2
+                ExitCode = 2,
+                Detections = detections,
+                DetectionDetailsAvailable = detectionDetailsAvailable
             };
         }
 
@@ -167,6 +182,87 @@ public sealed class DefenderScanService
         };
     }
 
+    private sealed class DetectionQuery
+    {
+        public List<DefenderDetection> Detections { get; init; } = [];
+        public bool Available { get; init; }
+    }
+
+    private static async Task<DetectionQuery> TryGetRecentDetectionsAsync(DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var timestamp = since.UtcDateTime.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+            var script = $$"""
+                $ErrorActionPreference = 'Stop'
+                $ProgressPreference = 'SilentlyContinue'
+                [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+                $start = [datetime]'{{timestamp}}'
+                $items = @(Get-MpThreatDetection -ErrorAction Stop |
+                    Where-Object { $_.InitialDetectionTime -ge $start } |
+                    ForEach-Object {
+                        [pscustomobject]@{
+                            threatId = [string]$_.ThreatID
+                            detectedUtc = [string]($_.InitialDetectionTime.ToUniversalTime().ToString('o'))
+                            resources = @($_.Resources | ForEach-Object { ([string]$_) -replace '^file:_','' -replace '^file:','' -replace '^containerfile:_','' -replace '^containerfile:','' })
+                        }
+                    })
+                $items | ConvertTo-Json -Depth 5 -Compress
+                """;
+            var result = await ProcessRunner.RunPowerShellAsync(script, TimeSpan.FromSeconds(20), cancellationToken).ConfigureAwait(false);
+            if (!result.Started || result.TimedOut || string.IsNullOrWhiteSpace(result.StandardOutput))
+                return new DetectionQuery { Available = false };
+            var output = result.StandardOutput.Trim();
+            if (output == "[]") return new DetectionQuery { Available = true };
+
+            using var document = JsonDocument.Parse(output);
+            var root = document.RootElement;
+            var items = root.ValueKind == JsonValueKind.Array
+                ? root.EnumerateArray().ToList()
+                : new List<JsonElement> { root };
+            var list = new List<DefenderDetection>();
+            foreach (var item in items)
+            {
+                if (item.ValueKind != JsonValueKind.Object) continue;
+                var threatId = item.TryGetProperty("threatId", out var id) ? id.GetString() ?? "Unknown" : "Unknown";
+                DateTimeOffset? detected = null;
+                if (item.TryGetProperty("detectedUtc", out var detectedElement) &&
+                    DateTimeOffset.TryParse(detectedElement.GetString(), out var parsed))
+                    detected = parsed;
+                var resources = new List<string>();
+                if (item.TryGetProperty("resources", out var resourceElement))
+                {
+                    if (resourceElement.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var resource in resourceElement.EnumerateArray())
+                        {
+                            if (resource.ValueKind == JsonValueKind.String)
+                            {
+                                var value = resource.GetString();
+                                if (!string.IsNullOrWhiteSpace(value)) resources.Add(value);
+                            }
+                        }
+                    }
+                    else if (resourceElement.ValueKind == JsonValueKind.String)
+                    {
+                        var value = resourceElement.GetString();
+                        if (!string.IsNullOrWhiteSpace(value)) resources.Add(value);
+                    }
+                }
+                if (resources.Count > 0)
+                    list.Add(new DefenderDetection { ThreatId = threatId, DetectedUtc = detected, Resources = resources });
+            }
+            return new DetectionQuery { Available = true, Detections = list };
+        }
+        catch (OperationCanceledException)
+        {
+            return new DetectionQuery { Available = false };
+        }
+        catch
+        {
+            return new DetectionQuery { Available = false };
+        }
+    }
     private static string? FindMpCmdRun()
     {
         var candidates = new[]
@@ -179,3 +275,6 @@ public sealed class DefenderScanService
         return candidates.FirstOrDefault(File.Exists);
     }
 }
+
+
+

@@ -29,7 +29,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly SettingsService _settingsService = new();
     private readonly IndicatorDatabase _indicators = IndicatorDatabase.LoadEmbedded();
     private readonly ScanEngine _scanEngine;
-    private readonly SecurityStatusService _securityService = new();
+    private readonly SecurityStatusService _securityService;
     private readonly DefenderScanService _defenderService = new();
     private readonly UpdateConfiguration _updateConfiguration = new();
     private readonly UpdateService _updateService;
@@ -85,28 +85,63 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _scanScopeDisplay = string.Empty;
     private string _scannedAreasDisplay = string.Empty;
     private string _defenderCurrentRoot = string.Empty;
+    private bool _scanRobloxExecutables = true;
+    private bool _scanLuaScripts = true;
+    private bool _scanMinecraftJars = true;
+    private bool _detectMinecraftCheatIndicators = true;
+    private bool _includeWindowsSecurity = true;
+    private bool _isPaused;
+    private ScanPauseController? _pauseController;
+    private ScanProfileKind _activeProfileKind = ScanProfileKind.Full;
+    private ScanProfileOption? _selectedProfileOption;
+    private bool _applyingProfilePreset;
+    private bool _suppressProfilePresetOnPageChange;
+    private long _jarFilesChecked;
+    private long _minecraftArchivesInspected;
+    private long _minecraftModsReviewed;
+    private string _archiveTruncationNote = string.Empty;
+    private string _scanConfigurationSummary = string.Empty;
 
     public MainViewModel(AppSettings settings, string? startupWarning, UpdateCheckOutcome? startupUpdate)
     {
         Settings = settings;
         _update = new UpdateSnapshot { CheckedUtc = settings.LastUpdateCheckUtc };
         _scanEngine = new ScanEngine(_indicators);
+        _securityService = new SecurityStatusService(_indicators);
         _updateService = new UpdateService(_updateConfiguration);
 
         NavigationItems =
         [
             new NavigationItem("dashboard", "Dashboard", "M3,3 H10 V10 H3 Z M14,3 H21 V10 H14 Z M3,14 H10 V21 H3 Z M14,14 H21 V21 H14 Z"),
-            new NavigationItem("scan", "Scan", "M4,5 H20 V19 H4 Z M4,9 H20 M8,5 V19 M12,12 H17"),
+            new NavigationItem("roblox", "Roblox PC Check", "M5,5 H19 V19 H5 Z M8,8 H16 V16 H8 Z M9,3 L9,6 M15,3 L15,6 M9,18 L9,21 M15,18 L15,21"),
+            new NavigationItem("minecraft", "Minecraft PC Check", "M12,3 L20,7 V17 L12,21 L4,17 V7 Z M4,7 L12,11 L20,7 M12,11 V21 M8,5 L16,9"),
+            new NavigationItem("full", "Full PC Check", "M12,2 L20,5 V11 C20,16 16.5,20 12,22 C7.5,20 4,16 4,11 V5 Z M8,12 L11,15 L16,9"),
             new NavigationItem("settings", "Settings", "M12,8 A4,4 0 1 0 12,16 A4,4 0 1 0 12,8 M12,2 V5 M12,19 V22 M2,12 H5 M19,12 H22 M5,5 L7,7 M17,17 L19,19 M19,5 L17,7 M7,17 L5,19"),
             new NavigationItem("about", "About", "M12,3 A9,9 0 1 0 12,21 A9,9 0 1 0 12,3 M12,11 V16 M12,8 V8.1")
         ];
 
+        ProfileOptions =
+        [
+            new ScanProfileOption(ScanProfileKind.Roblox, "Roblox Scan", "Focus on Roblox executor indicators, related components, and Lua scripts in selected locations."),
+            new ScanProfileOption(ScanProfileKind.Minecraft, "Minecraft Scan", "Focus on Minecraft JAR/mod archives, known cheat-client indicators, and selected game or launcher folders."),
+            new ScanProfileOption(ScanProfileKind.Quick, "Quick Scan", "Review common user and game locations without scanning full drives, plus basic Windows security status."),
+            new ScanProfileOption(ScanProfileKind.Full, "Full PC Scan", "Combine Roblox, Minecraft, and Windows checks across selected drives and locations."),
+            new ScanProfileOption(ScanProfileKind.Custom, "Custom Folder Scan", "Scan only the folders you add, with the categories you select.")
+        ];
+        _selectedProfileOption = ProfileOptions.First(p => p.Kind == ScanProfileKind.Full);
+
+        LoadCommonFolders();
+        LoadGameFolders();
+
         FindingFilters =
         [
             new FindingFilterOption("all", "All"),
-            new FindingFilterOption("executor", "Executor indicators"),
-            new FindingFilterOption("script", "Script review"),
-            new FindingFilterOption("malware", "Malware indicators")
+            new FindingFilterOption("roblox", "Roblox"),
+            new FindingFilterOption("minecraft", "Minecraft"),
+            new FindingFilterOption("known", "Known cheat"),
+            new FindingFilterOption("suspicious", "Suspicious"),
+            new FindingFilterOption("unknown", "Unknown / mods"),
+            new FindingFilterOption("malware", "Malware")
         ];
         _selectedFilter = FindingFilters[0];
 
@@ -139,7 +174,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _defenderTimer.Tick += (_, _) =>
         {
             if (_defenderStopwatch is not null && IsDefenderScanning)
-                DefenderProgressText = $"Windows Defender is scanning {_defenderCurrentRoot} · {AppFormat.Duration(_defenderStopwatch.Elapsed)}";
+                DefenderProgressText = $"Windows Defender is scanning {_defenderCurrentRoot}  |  {AppFormat.Duration(_defenderStopwatch.Elapsed)}";
         };
 
         _updateTimer = new DispatcherTimer();
@@ -152,17 +187,23 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => !IsBusy);
         CancelScanCommand = new RelayCommand(CancelScan, () => IsScanning);
+        PauseScanCommand = new RelayCommand(PauseScan, () => IsScanning && !IsPaused);
+        ResumeScanCommand = new RelayCommand(ResumeScan, () => IsScanning && IsPaused);
         RunDefenderScanCommand = new AsyncRelayCommand(RunDefenderScanAsync, () => !IsBusy);
         CancelDefenderScanCommand = new RelayCommand(CancelDefenderScan, () => IsDefenderScanning);
         RefreshSecurityCommand = new AsyncRelayCommand(RefreshSecurityAsync, () => !IsSecurityChecking);
         CheckUpdatesCommand = new AsyncRelayCommand(() => CheckForUpdatesAsync(automatic: false), () => !_updateBusy);
         InstallUpdateCommand = new AsyncRelayCommand(InstallPendingUpdateAsync, () => CanInstallUpdate && !IsBusy);
-        RefreshDrivesCommand = new RelayCommand(() => RefreshDrives(false), () => !IsBusy);
+        RefreshDrivesCommand = new RelayCommand(RefreshScanLocations, () => !IsBusy);
         SelectFixedDrivesCommand = new RelayCommand(SelectFixedDrives, () => !IsBusy);
         ClearDriveSelectionCommand = new RelayCommand(ClearDriveSelection, () => !IsBusy);
+        ClearLocationsCommand = new RelayCommand(ClearLocations, () => !IsBusy);
+        AddCustomFolderCommand = new AsyncRelayCommand(AddCustomFolderAsync, () => !IsBusy);
+        RemoveCustomFolderCommand = new RelayCommand<ScanLocationOption>(RemoveCustomFolder, _ => !IsBusy);
         ViewFindingDetailsCommand = new RelayCommand<ScanFinding>(OpenFindingDetails);
         OpenFindingLocationCommand = new RelayCommand<ScanFinding>(OpenFindingLocation);
         OpenStartupLocationCommand = new RelayCommand<StartupEntry>(OpenStartupLocation);
+        OpenProcessLocationCommand = new RelayCommand<RunningProcessInfo>(OpenProcessLocation);
         CloseResultsCommand = new RelayCommand(CloseResults, () => HasScanOutcome && !IsScanning);
         DismissNoticeCommand = new RelayCommand(DismissNotice);
         OpenWindowsSecurityCommand = new RelayCommand(OpenWindowsSecurity);
@@ -170,25 +211,36 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OpenLocalDataFolderCommand = new RelayCommand(OpenLocalDataFolder);
         SetUpdateIntervalCommand = new RelayCommand<string?>(SetUpdateInterval);
         NavigateCommand = new RelayCommand<string?>(Navigate);
-        NavigateScanCommand = new RelayCommand(() => Navigate("scan"));
+        NavigateScanCommand = new RelayCommand(OpenScanWorkspace);
         NavigateSettingsCommand = new RelayCommand(() => Navigate("settings"));
+        StartFullScanSetupCommand = new RelayCommand(OpenFullScanSetup);
         RefreshUpdateConfigurationState();
+        ApplyProfilePreset(ScanProfileKind.Full, updatePage: false);
+        InstallUpdateCommand.RaiseCanExecuteChanged();
         SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
     }
 
     public AppSettings Settings { get; }
     public IReadOnlyList<NavigationItem> NavigationItems { get; }
     public IReadOnlyList<FindingFilterOption> FindingFilters { get; }
+    public IReadOnlyList<ScanProfileOption> ProfileOptions { get; }
     public ObservableCollection<DriveOption> Drives { get; } = [];
+    public ObservableCollection<ScanLocationOption> GameFolders { get; } = [];
+    public ObservableCollection<ScanLocationOption> CommonFolders { get; } = [];
+    public ObservableCollection<ScanLocationOption> CustomFolders { get; } = [];
     public ObservableCollection<ScanFinding> Findings { get; } = [];
     public ObservableCollection<InaccessibleArea> InaccessibleAreas { get; } = [];
+    public ObservableCollection<ArchiveIssue> ArchiveIssues { get; } = [];
     public ICollectionView FindingsView { get; }
 
     public RelayCommand<ScanFinding> ViewFindingDetailsCommand { get; }
     public RelayCommand<ScanFinding> OpenFindingLocationCommand { get; }
     public RelayCommand<StartupEntry> OpenStartupLocationCommand { get; }
+    public RelayCommand<RunningProcessInfo> OpenProcessLocationCommand { get; }
     public AsyncRelayCommand StartScanCommand { get; }
     public RelayCommand CancelScanCommand { get; }
+    public RelayCommand PauseScanCommand { get; }
+    public RelayCommand ResumeScanCommand { get; }
     public AsyncRelayCommand RunDefenderScanCommand { get; }
     public RelayCommand CancelDefenderScanCommand { get; }
     public AsyncRelayCommand RefreshSecurityCommand { get; }
@@ -197,6 +249,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand RefreshDrivesCommand { get; }
     public RelayCommand SelectFixedDrivesCommand { get; }
     public RelayCommand ClearDriveSelectionCommand { get; }
+    public RelayCommand ClearLocationsCommand { get; }
+    public AsyncRelayCommand AddCustomFolderCommand { get; }
+    public RelayCommand<ScanLocationOption> RemoveCustomFolderCommand { get; }
     public RelayCommand CloseResultsCommand { get; }
     public RelayCommand DismissNoticeCommand { get; }
     public RelayCommand OpenWindowsSecurityCommand { get; }
@@ -206,6 +261,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand<string?> NavigateCommand { get; }
     public RelayCommand NavigateScanCommand { get; }
     public RelayCommand NavigateSettingsCommand { get; }
+    public RelayCommand StartFullScanSetupCommand { get; }
 
     public string CurrentPageKey
     {
@@ -219,34 +275,129 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(IsAboutPage));
             OnPropertyChanged(nameof(CurrentPageTitle));
             OnPropertyChanged(nameof(CurrentPageSubtitle));
+
+            if (!_suppressProfilePresetOnPageChange &&
+                (value == "roblox" || value == "minecraft" || value == "full"))
+            {
+                ApplyProfilePreset(ScanProfileKindForPage(value), updatePage: false, resetSelections: true);
+            }
         }
     }
 
     public bool IsDashboardPage => CurrentPageKey == "dashboard";
-    public bool IsScanPage => CurrentPageKey == "scan";
+    public bool IsScanPage => CurrentPageKey is "roblox" or "minecraft" or "full";
     public bool IsSettingsPage => CurrentPageKey == "settings";
     public bool IsAboutPage => CurrentPageKey == "about";
 
-    public string CurrentPageTitle => CurrentPageKey switch
-    {
-        "scan" => "Scan",
-        "settings" => "Settings",
-        "about" => "About",
-        _ => "Dashboard"
-    };
+    public string CurrentPageTitle => IsScanPage
+        ? ActiveProfileTitle
+        : CurrentPageKey switch
+        {
+            "settings" => "Settings",
+            "about" => "About",
+            _ => "Dashboard"
+        };
 
-    public string CurrentPageSubtitle => CurrentPageKey switch
-    {
-        "scan" => "Choose drives, scan locally, and review every result with its limits.",
-        "settings" => "Updates, motion, and local preferences.",
-        "about" => "Purpose, privacy, detection limits, and update configuration.",
-        _ => "A local, honest check of this PC."
-    };
+    public string CurrentPageSubtitle => IsScanPage
+        ? ActiveProfileDescription
+        : CurrentPageKey switch
+        {
+            "settings" => "Updates, motion, and local preferences.",
+            "about" => "Purpose, privacy, detection limits, and update configuration.",
+            _ => "A local, honest check of this PC."
+        };
 
     public void Navigate(string? key)
     {
-        if (key is "dashboard" or "scan" or "settings" or "about")
+        if (key is "dashboard" or "roblox" or "minecraft" or "full" or "settings" or "about")
             CurrentPageKey = key;
+    }
+
+    private static ScanProfileKind ScanProfileKindForPage(string key) => key switch
+    {
+        "roblox" => ScanProfileKind.Roblox,
+        "minecraft" => ScanProfileKind.Minecraft,
+        _ => ScanProfileKind.Full
+    };
+
+    private static string PageKeyForProfile(ScanProfileKind kind) => kind switch
+    {
+        ScanProfileKind.Roblox => "roblox",
+        ScanProfileKind.Minecraft => "minecraft",
+        _ => "full"
+    };
+
+    public ScanProfileOption? SelectedProfile
+    {
+        get => _selectedProfileOption;
+        set
+        {
+            if (value is null || ReferenceEquals(value, _selectedProfileOption)) return;
+            _selectedProfileOption = value;
+            OnPropertyChanged();
+            ApplyProfilePreset(
+                value.Kind,
+                updatePage: value.Kind is ScanProfileKind.Roblox or ScanProfileKind.Minecraft or ScanProfileKind.Full,
+                resetSelections: true);
+        }
+    }
+
+    public ScanProfileKind ActiveProfileKind => _activeProfileKind;
+    public string ActiveProfileTitle => _selectedProfileOption?.Label ?? "Full PC Scan";
+    public string ActiveProfileDescription => _selectedProfileOption?.Description ?? "Review this PC locally.";
+    public string ActiveProfileShortTitle => _activeProfileKind switch
+    {
+        ScanProfileKind.Roblox => "Roblox check",
+        ScanProfileKind.Minecraft => "Minecraft check",
+        ScanProfileKind.Quick => "Quick check",
+        ScanProfileKind.Custom => "Custom folder check",
+        _ => "Full PC check"
+    };
+
+    public void ApplyProfilePreset(ScanProfileKind kind, bool updatePage, bool resetSelections = true)
+    {
+        if (_applyingProfilePreset) return;
+        _applyingProfilePreset = true;
+        try
+        {
+            _activeProfileKind = kind;
+            _selectedProfileOption = ProfileOptions.FirstOrDefault(p => p.Kind == kind) ?? _selectedProfileOption;
+            OnPropertyChanged(nameof(SelectedProfile));
+            OnPropertyChanged(nameof(ActiveProfileKind));
+            OnPropertyChanged(nameof(ActiveProfileTitle));
+            OnPropertyChanged(nameof(ActiveProfileDescription));
+            OnPropertyChanged(nameof(ActiveProfileShortTitle));
+            OnPropertyChanged(nameof(CurrentPageTitle));
+            OnPropertyChanged(nameof(CurrentPageSubtitle));
+
+            if (updatePage && (kind == ScanProfileKind.Roblox || kind == ScanProfileKind.Minecraft || kind == ScanProfileKind.Full))
+            {
+                _suppressProfilePresetOnPageChange = true;
+                CurrentPageKey = PageKeyForProfile(kind);
+                _suppressProfilePresetOnPageChange = false;
+            }
+
+            if (resetSelections) ApplyProfileSelections(kind);
+            RaiseScopeProperties();
+            RaiseScanConfigurationProperties();
+        }
+        finally
+        {
+            _applyingProfilePreset = false;
+        }
+    }
+
+    public void OpenScanWorkspace()
+    {
+        _suppressProfilePresetOnPageChange = true;
+        CurrentPageKey = PageKeyForProfile(_activeProfileKind);
+        _suppressProfilePresetOnPageChange = false;
+    }
+
+    public void OpenFullScanSetup()
+    {
+        ApplyProfilePreset(ScanProfileKind.Full, updatePage: true, resetSelections: true);
+        CurrentPageKey = "full";
     }
 
     public bool HasNotice => _hasNotice;
@@ -314,6 +465,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             RaiseScopeProperties();
     }
 
+    private void LocationOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ScanLocationOption.IsSelected))
+            RaiseScopeProperties();
+    }
+
     private void SelectFixedDrives()
     {
         foreach (var drive in Drives) drive.IsSelected = drive.IsFixed;
@@ -326,6 +483,104 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         RaiseScopeProperties();
     }
 
+    private void ClearLocations()
+    {
+        foreach (var drive in Drives) drive.IsSelected = false;
+        foreach (var location in CommonFolders.Concat(GameFolders).Concat(CustomFolders))
+            location.IsSelected = false;
+        RaiseScopeProperties();
+    }
+
+    private void RefreshScanLocations()
+    {
+        RefreshDrives(initial: false);
+        LoadGameFolders();
+    }
+
+    private void LoadCommonFolders()
+    {
+        foreach (var location in CommonFolders) location.PropertyChanged -= LocationOnPropertyChanged;
+        CommonFolders.Clear();
+        AddLocation(CommonFolders, "Downloads", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Downloads", ScanLocationKind.Common);
+        AddLocation(CommonFolders, "Desktop", Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), ScanLocationKind.Common);
+        AddLocation(CommonFolders, "Temporary files", Path.GetTempPath(), ScanLocationKind.Common);
+        RaiseScopeProperties();
+    }
+
+    private void LoadGameFolders()
+    {
+        foreach (var location in GameFolders) location.PropertyChanged -= LocationOnPropertyChanged;
+        GameFolders.Clear();
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        AddLocation(GameFolders, "Roblox installation and versions", Path.Combine(localAppData, "Roblox"), ScanLocationKind.Roblox);
+        AddLocation(GameFolders, "Roblox user folder", Path.Combine(userProfile, "Roblox"), ScanLocationKind.Roblox);
+        AddLocation(GameFolders, "Minecraft .minecraft folder", Path.Combine(appData, ".minecraft"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "Prism Launcher instances", Path.Combine(appData, "PrismLauncher", "instances"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "Modrinth launcher profiles", Path.Combine(appData, "ModrinthApp", "profiles"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "MultiMC instances", Path.Combine(appData, "MultiMC", "instances"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "ATLauncher instances", Path.Combine(appData, "ATLauncher", "instances"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "CurseForge instances", Path.Combine(userProfile, "curseforge", "minecraft", "Instances"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "Technic Launcher modpacks", Path.Combine(appData, "technic", "modpacks"), ScanLocationKind.Minecraft);
+        AddLocation(GameFolders, "GDLauncher instances", Path.Combine(appData, "GDLauncher", "instances"), ScanLocationKind.Minecraft);
+
+        foreach (var option in GameFolders)
+            option.IsSelected = _activeProfileKind switch
+            {
+                ScanProfileKind.Roblox => option.Kind == ScanLocationKind.Roblox,
+                ScanProfileKind.Minecraft => option.Kind == ScanLocationKind.Minecraft,
+                ScanProfileKind.Quick or ScanProfileKind.Full => true,
+                _ => false
+            };
+        RaiseScopeProperties();
+    }
+
+    private void AddLocation(ObservableCollection<ScanLocationOption> target, string label, string path, ScanLocationKind kind)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path)) return;
+        if (target.Any(l => l.Path.Equals(path, StringComparison.OrdinalIgnoreCase))) return;
+        var option = new ScanLocationOption { Label = label, Path = path, Kind = kind };
+        option.PropertyChanged += LocationOnPropertyChanged;
+        target.Add(option);
+    }
+
+    private async Task AddCustomFolderAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select a folder to scan",
+            Multiselect = true
+        };
+        if (dialog.ShowDialog(Owner) != true) return;
+        foreach (var folder in dialog.FolderNames)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder)) continue;
+            if (CustomFolders.Any(l => l.Path.Equals(folder, StringComparison.OrdinalIgnoreCase))) continue;
+            var option = new ScanLocationOption
+            {
+                Label = Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+                Path = folder,
+                Kind = ScanLocationKind.Custom,
+                IsCustom = true,
+                IsSelected = true
+            };
+            option.PropertyChanged += LocationOnPropertyChanged;
+            CustomFolders.Add(option);
+        }
+        await Task.CompletedTask;
+        RaiseScopeProperties();
+    }
+
+    private void RemoveCustomFolder(ScanLocationOption? option)
+    {
+        if (option is null) return;
+        option.PropertyChanged -= LocationOnPropertyChanged;
+        CustomFolders.Remove(option);
+        RaiseScopeProperties();
+    }
+
     private void RaiseScopeProperties()
     {
         OnPropertyChanged(nameof(HasSelectedDrives));
@@ -333,6 +588,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SelectedScopeSummary));
         OnPropertyChanged(nameof(SelectedRootsDisplay));
         OnPropertyChanged(nameof(SelectedDrives));
+        OnPropertyChanged(nameof(SelectedRoots));
+        OnPropertyChanged(nameof(HasScanLocations));
+        OnPropertyChanged(nameof(HasSelectedFileCategories));
+        OnPropertyChanged(nameof(ProfileChecksSummary));
+        OnPropertyChanged(nameof(SelectedCategorySummary));
+        OnPropertyChanged(nameof(CanStartConfiguredScan));
         StartScanCommand?.RaiseCanExecuteChanged();
         RunDefenderScanCommand?.RaiseCanExecuteChanged();
     }
@@ -340,16 +601,172 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public IReadOnlyList<DriveOption> SelectedDrives => Drives.Where(d => d.IsSelected).ToList();
     public bool HasSelectedDrives => Drives.Any(d => d.IsSelected);
     public int SelectedDriveCount => Drives.Count(d => d.IsSelected);
-    public string SelectedRootsDisplay => string.Join(", ", Drives.Where(d => d.IsSelected).Select(d => d.RootPath));
+    public IReadOnlyList<ScanLocationOption> SelectedLocations =>
+        CommonFolders.Concat(GameFolders).Concat(CustomFolders).Where(l => l.IsSelected).ToList();
+    public IReadOnlyList<string> SelectedRoots => BuildScanRoots();
+    public bool HasScanLocations => SelectedRoots.Count > 0;
+    public bool HasGameFolders => GameFolders.Count > 0;
+    public bool HasCommonFolders => CommonFolders.Count > 0;
+    public bool HasCustomFolders => CustomFolders.Count > 0;
+    public string SelectedRootsDisplay => SelectedRoots.Count == 0 ? "No scan locations selected" : string.Join(", ", SelectedRoots);
     public string SelectedScopeSummary
     {
         get
         {
-            var selected = Drives.Where(d => d.IsSelected).ToList();
-            if (selected.Count == 0) return "No drives selected";
-            var bytes = selected.Sum(d => d.TotalBytes);
-            return $"{selected.Count} drive{(selected.Count == 1 ? "" : "s")} selected · {AppFormat.Bytes(bytes)} total";
+            var roots = SelectedRoots;
+            if (roots.Count == 0) return "No scan locations selected";
+            var driveBytes = Drives.Where(d => d.IsSelected).Sum(d => d.TotalBytes);
+            var suffix = driveBytes > 0 ? $"  |  {AppFormat.Bytes(driveBytes)} of local drives" : "";
+            return $"{roots.Count} location{(roots.Count == 1 ? "" : "s")} selected{suffix}";
         }
+    }
+
+    public bool ScanRobloxExecutables
+    {
+        get => _scanRobloxExecutables;
+        set { if (SetProperty(ref _scanRobloxExecutables, value)) RaiseScanConfigurationProperties(); }
+    }
+
+    public bool ScanLuaScripts
+    {
+        get => _scanLuaScripts;
+        set { if (SetProperty(ref _scanLuaScripts, value)) RaiseScanConfigurationProperties(); }
+    }
+
+    public bool ScanMinecraftJars
+    {
+        get => _scanMinecraftJars;
+        set { if (SetProperty(ref _scanMinecraftJars, value)) RaiseScanConfigurationProperties(); }
+    }
+
+    public bool DetectMinecraftCheatIndicators
+    {
+        get => _detectMinecraftCheatIndicators;
+        set { if (SetProperty(ref _detectMinecraftCheatIndicators, value)) RaiseScanConfigurationProperties(); }
+    }
+
+    public bool IncludeWindowsSecurity
+    {
+        get => _includeWindowsSecurity;
+        set { if (SetProperty(ref _includeWindowsSecurity, value)) RaiseScanConfigurationProperties(); }
+    }
+
+    public bool HasSelectedFileCategories =>
+        ScanRobloxExecutables || ScanLuaScripts || ScanMinecraftJars || DetectMinecraftCheatIndicators;
+
+    public bool CanStartConfiguredScan => HasSelectedFileCategories
+        ? HasScanLocations
+        : IncludeWindowsSecurity;
+
+    public string SelectedCategorySummary
+    {
+        get
+        {
+            var labels = new List<string>();
+            if (ScanRobloxExecutables) labels.Add("Roblox executors and components");
+            if (ScanLuaScripts) labels.Add("Lua script review");
+            if (ScanMinecraftJars) labels.Add("Minecraft JAR/mod review");
+            if (DetectMinecraftCheatIndicators) labels.Add("Known Minecraft cheat indicators");
+            if (IncludeWindowsSecurity) labels.Add("Windows security overview");
+            return labels.Count == 0 ? "No scan categories selected" : string.Join("  |  ", labels);
+        }
+    }
+
+    public string ProfileChecksSummary
+    {
+        get
+        {
+            var categories = new List<string>();
+            if (ScanRobloxExecutables) categories.Add("Roblox executable/library indicators");
+            if (ScanLuaScripts) categories.Add("static Lua script review");
+            if (ScanMinecraftJars) categories.Add("static Minecraft JAR/mod review");
+            if (DetectMinecraftCheatIndicators) categories.Add("known Minecraft cheat indicators");
+            if (IncludeWindowsSecurity) categories.Add("Windows security, startup entries, and running processes");
+            var categoryText = categories.Count == 0
+                ? "No categories are selected."
+                : string.Join("; ", categories) + ".";
+            return $"{ActiveProfileDescription} {categoryText} Locations: {SelectedScopeSummary}. " +
+                   "A privacy confirmation is shown before scanning.";
+        }
+    }
+
+    private void ApplyProfileSelections(ScanProfileKind kind)
+    {
+        ScanRobloxExecutables = kind is ScanProfileKind.Roblox or ScanProfileKind.Quick or ScanProfileKind.Full or ScanProfileKind.Custom;
+        ScanLuaScripts = kind is ScanProfileKind.Roblox or ScanProfileKind.Quick or ScanProfileKind.Full or ScanProfileKind.Custom;
+        ScanMinecraftJars = kind is ScanProfileKind.Minecraft or ScanProfileKind.Quick or ScanProfileKind.Full or ScanProfileKind.Custom;
+        DetectMinecraftCheatIndicators = ScanMinecraftJars;
+        IncludeWindowsSecurity = true;
+
+        foreach (var drive in Drives)
+            drive.IsSelected = kind == ScanProfileKind.Full && drive.IsFixed;
+
+        foreach (var location in CommonFolders)
+            location.IsSelected = kind != ScanProfileKind.Custom;
+
+        foreach (var location in GameFolders)
+            location.IsSelected = kind switch
+            {
+                ScanProfileKind.Roblox => location.Kind == ScanLocationKind.Roblox,
+                ScanProfileKind.Minecraft => location.Kind == ScanLocationKind.Minecraft,
+                ScanProfileKind.Quick or ScanProfileKind.Full => true,
+                _ => false
+            };
+    }
+
+    private void RaiseScanConfigurationProperties()
+    {
+        OnPropertyChanged(nameof(ScanRobloxExecutables));
+        OnPropertyChanged(nameof(ScanLuaScripts));
+        OnPropertyChanged(nameof(ScanMinecraftJars));
+        OnPropertyChanged(nameof(DetectMinecraftCheatIndicators));
+        OnPropertyChanged(nameof(IncludeWindowsSecurity));
+        OnPropertyChanged(nameof(HasSelectedFileCategories));
+        OnPropertyChanged(nameof(CanStartConfiguredScan));
+        OnPropertyChanged(nameof(SelectedCategorySummary));
+        OnPropertyChanged(nameof(ProfileChecksSummary));
+        OnPropertyChanged(nameof(CurrentPageTitle));
+        OnPropertyChanged(nameof(CurrentPageSubtitle));
+    }
+    private IReadOnlyList<string> BuildScanRoots()
+    {
+        var paths = new List<string>();
+        paths.AddRange(Drives.Where(d => d.IsSelected).Select(d => d.RootPath));
+        paths.AddRange(SelectedLocations.Select(l => l.Path));
+        var ordered = paths
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(p => p.Length)
+            .ToList();
+        var result = new List<string>();
+        foreach (var path in ordered)
+        {
+            var normalized = NormalizePath(path);
+            var covered = result.Any(existing => IsSameOrChild(existing, normalized));
+            if (!covered) result.Add(path);
+        }
+        return result;
+    }
+
+    private static string NormalizePath(string path)
+    {
+        try
+        {
+            return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+        catch
+        {
+            return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+    }
+
+    private static bool IsSameOrChild(string parent, string candidate)
+    {
+        var normalizedParent = NormalizePath(parent);
+        var normalizedCandidate = NormalizePath(candidate);
+        if (normalizedParent.Equals(normalizedCandidate, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return normalizedCandidate.StartsWith(normalizedParent + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     }
 
     public bool IsScanning => ScanState == ScanUiState.Running;
@@ -362,6 +779,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(IsScanning));
             OnPropertyChanged(nameof(IsBusy));
             OnPropertyChanged(nameof(ShowScanMetrics));
+            OnPropertyChanged(nameof(ScanActivityActive));
             OnPropertyChanged(nameof(PcStatusLabel));
             OnPropertyChanged(nameof(PcStatusDetail));
             OnPropertyChanged(nameof(PcStatusTone));
@@ -370,10 +788,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(FindingsEmptyText));
             CancelScanCommand?.RaiseCanExecuteChanged();
             StartScanCommand?.RaiseCanExecuteChanged();
+            PauseScanCommand?.RaiseCanExecuteChanged();
+            ResumeScanCommand?.RaiseCanExecuteChanged();
             RunDefenderScanCommand?.RaiseCanExecuteChanged();
             RefreshDrivesCommand?.RaiseCanExecuteChanged();
             SelectFixedDrivesCommand?.RaiseCanExecuteChanged();
             ClearDriveSelectionCommand?.RaiseCanExecuteChanged();
+            ClearLocationsCommand?.RaiseCanExecuteChanged();
+            AddCustomFolderCommand?.RaiseCanExecuteChanged();
+            RemoveCustomFolderCommand?.RaiseCanExecuteChanged();
             CloseResultsCommand?.RaiseCanExecuteChanged();
             InstallUpdateCommand?.RaiseCanExecuteChanged();
         }
@@ -459,6 +882,27 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         get => _inaccessibleTruncationNote;
         private set => SetProperty(ref _inaccessibleTruncationNote, value);
     }
+    public string ArchiveTruncationNote
+    {
+        get => _archiveTruncationNote;
+        private set => SetProperty(ref _archiveTruncationNote, value);
+    }
+    public string ArchiveIssueCountText => AppFormat.Count(ArchiveIssues.Count);
+    public bool HasArchiveIssues => ArchiveIssues.Count > 0;
+    public bool HasMinecraftScanData => _jarFilesChecked > 0 || Findings.Any(f => f.Category == FindingCategory.MinecraftReview);
+    public string JarFilesCheckedText => AppFormat.Count(_jarFilesChecked);
+    public string MinecraftArchivesText => AppFormat.Count(_minecraftArchivesInspected);
+    public string MinecraftModsReviewedText => AppFormat.Count(_minecraftModsReviewed);
+    public string MinecraftSummaryText
+    {
+        get
+        {
+            if (_jarFilesChecked == 0) return "No Minecraft JAR archives were checked in this scan.";
+            var known = Findings.Count(f => f.Classification == FindingClassification.KnownCheatClient);
+            var unknown = Findings.Count(f => f.Category == FindingCategory.MinecraftReview && f.Classification is FindingClassification.UnknownFile or FindingClassification.LikelyLegitimateMod);
+            return $"{JarFilesCheckedText} JAR files checked | {MinecraftArchivesText} archives inspected | {MinecraftModsReviewedText} mod review items | {known} known cheat indicator{(known == 1 ? "" : "s")} | {unknown} unknown/legitimate mod{(unknown == 1 ? "" : "s")}.";
+        }
+    }
     public bool FindingLimitReached
     {
         get => _findingLimitReached;
@@ -472,6 +916,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string ScanStatusLabel => ScanState switch
     {
+        ScanUiState.Running when IsPaused => "Paused",
         ScanUiState.Running => "Scanning",
         ScanUiState.Cancelled => "Scan incomplete",
         ScanUiState.Failed => "Scan stopped",
@@ -481,6 +926,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string PcStatusLabel => ScanState switch
     {
+        ScanUiState.Running when IsPaused => "Scan paused",
         ScanUiState.Running => "Scan in progress",
         ScanUiState.Cancelled => "Scan incomplete",
         ScanUiState.Failed => "Scan stopped",
@@ -490,18 +936,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string PcStatusDetail => ScanState switch
     {
-        ScanUiState.Running => "WTX PC CHECK is checking the selected drives. The file count and current path come from the running scan.",
+        ScanUiState.Running when IsPaused => "The scan is paused. The file count stays at the last completed boundary; resume to continue. Windows Defender scans can be cancelled but not paused.",
+        ScanUiState.Running => "WTX PC CHECK is checking the selected locations. The file count and current path come from the running scan.",
         ScanUiState.Cancelled => "The scan was stopped before it finished. Results are partial, and no conclusion about this PC can be drawn.",
         ScanUiState.Failed => "The scan stopped because of an unexpected error. No conclusion about this PC can be drawn.",
         ScanUiState.Completed when HasFindings =>
             $"{Findings.Count} item{(Findings.Count == 1 ? "" : "s")} matched review indicators. Indicators are not proof of malware. Review each item, its detection method, and its limitations.",
         ScanUiState.Completed =>
-            "No executor indicators or script concerns were flagged in the areas that could be read. This does not mean the PC is clean. Some files may have been inaccessible, and detection is not perfect.",
-        _ => "Run a scan to review selected drives. WTX PC CHECK never guarantees that a PC is clean or that every threat has been found."
+            "No review indicators were flagged in the areas that could be read. This does not mean the PC is clean. Some files may have been inaccessible, and detection is not perfect.",
+        _ => "Run a scan to review selected locations. WTX PC CHECK never guarantees that a PC is clean or that every threat has been found."
     };
 
     public string PcStatusTone => ScanState switch
     {
+        ScanUiState.Running when IsPaused => "Warning",
         ScanUiState.Running => "Active",
         ScanUiState.Cancelled or ScanUiState.Failed => "Danger",
         ScanUiState.Completed when HasFindings => "Warning",
@@ -511,11 +959,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public string ScanStatusDetail => ScanState switch
     {
+        ScanUiState.Running when IsPaused => "Paused. Resume to continue the local scan.",
         ScanUiState.Running => "Files are being inspected locally. The current path below reflects the scan's actual position.",
         ScanUiState.Completed => ScanSummaryText,
         ScanUiState.Cancelled => "The scan was cancelled. Any findings shown are partial and the inaccessible-area list may be incomplete.",
         ScanUiState.Failed => ScanSummaryText,
-        _ => "Choose drives and start a scan. A privacy confirmation appears before every scan."
+        _ => "Choose categories and locations, then start a scan. A privacy confirmation appears before every scan."
     };
 
     private void RaiseScanCounters()
@@ -537,36 +986,55 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private async Task StartScanAsync()
     {
         if (IsBusy) return;
-        if (!HasSelectedDrives)
+        if (!HasSelectedFileCategories && !IncludeWindowsSecurity)
         {
-            MessageDialog.Show(Owner, "Select at least one drive",
-                "No drive is selected. Open Scan and select at least one local, removable, or network drive before starting.",
-                "Open Scan", "Cancel", warning: true);
-            Navigate("scan");
+            MessageDialog.Show(Owner, "Select a scan category",
+                "No scan category is selected. Choose at least one Roblox, Minecraft, or Windows security category before starting.",
+                "OK", null, warning: true);
+            return;
+        }
+
+        var roots = BuildScanRoots();
+        if (HasSelectedFileCategories && roots.Count == 0)
+        {
+            MessageDialog.Show(Owner, "Select at least one location",
+                "No scan location is selected. Select a drive, detected game folder, common folder, or add a custom folder before starting.",
+                "Open locations", "Cancel", warning: true);
             return;
         }
 
         if (!PrivacyDialog.Show(Owner, EffectiveReduceMotion)) return;
 
         CloseResultsInternal();
-        Navigate("scan");
+        OpenScanWorkspace();
         CurrentPath = string.Empty;
         ScanElapsedText = "0s";
         ScanSummaryText = string.Empty;
         HasScanOutcome = false;
         ScanState = ScanUiState.Running;
-        ScanScopeDisplay = string.Join(", ", SelectedDrives.Select(d => d.RootPath));
+        IsPaused = false;
+        ScanScopeDisplay = roots.Count == 0
+            ? "Windows security check only"
+            : string.Join(", ", roots);
+        ScanConfigurationSummary = SelectedCategorySummary;
         _scanStopwatch = Stopwatch.StartNew();
         _scanTimer.Start();
+        _pauseController = new ScanPauseController();
 
         var sequence = ++_scanSequence;
         _scanCts = new CancellationTokenSource();
         var token = _scanCts.Token;
         var request = new ScanRequest
         {
-            Roots = SelectedDrives.Select(d => d.RootPath).ToList(),
-            AnalyzeLuaContents = true,
-            MaxFindings = 1000
+            Roots = HasSelectedFileCategories ? roots : [],
+            ScanRobloxExecutables = ScanRobloxExecutables,
+            ScanLuaScripts = ScanLuaScripts,
+            AnalyzeLuaContents = ScanLuaScripts,
+            ScanMinecraftJars = ScanMinecraftJars,
+            DetectMinecraftCheatIndicators = DetectMinecraftCheatIndicators,
+            ReviewMinecraftJars = ScanMinecraftJars,
+            MaxFindings = 1000,
+            MaxMinecraftReviewFindings = 300
         };
 
         var progress = new Progress<ScanProgress>(value =>
@@ -585,7 +1053,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ScanOutcome? outcome = null;
         try
         {
-            outcome = await Task.Run(() => _scanEngine.Scan(request, progress, findingProgress, token), token);
+            outcome = await Task.Run(
+                () => _scanEngine.Scan(request, progress, findingProgress, token, _pauseController),
+                token);
         }
         catch (OperationCanceledException)
         {
@@ -615,26 +1085,81 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             _scanTimer.Stop();
             _scanStopwatch?.Stop();
+            _pauseController?.Dispose();
+            _pauseController = null;
+            IsPaused = false;
             _scanCts?.Dispose();
             _scanCts = null;
         }
 
         if (outcome is not null && sequence == _scanSequence)
-        {
             LoadScanOutcome(outcome);
-        }
 
         StartScanCommand.RaiseCanExecuteChanged();
         RunDefenderScanCommand.RaiseCanExecuteChanged();
+        PauseScanCommand.RaiseCanExecuteChanged();
+        ResumeScanCommand.RaiseCanExecuteChanged();
         InstallUpdateCommand.RaiseCanExecuteChanged();
 
-        if (Security.State == SecurityQueryState.NotChecked)
+        if (IncludeWindowsSecurity)
             _ = RefreshSecurityAsync();
 
         if (_deferredUpdatePrompt && !IsBusy)
             await PromptForUpdateRestartAsync();
     }
 
+    public string ScanConfigurationSummary
+    {
+        get => _scanConfigurationSummary;
+        private set => SetProperty(ref _scanConfigurationSummary, value);
+    }
+
+    private void PauseScan()
+    {
+        if (!IsScanning || IsPaused) return;
+        _pauseController?.Pause();
+        IsPaused = true;
+        ScanSummaryText = "Scan paused by you. Resume to continue. The current file operation may still finish before the scan stops.";
+        OnPropertyChanged(nameof(ScanStatusDetail));
+    }
+
+    private void ResumeScan()
+    {
+        if (!IsScanning || !IsPaused) return;
+        _pauseController?.Resume();
+        IsPaused = false;
+        ScanSummaryText = "Resuming the scan...";
+        OnPropertyChanged(nameof(ScanStatusDetail));
+    }
+
+    public bool IsPaused
+    {
+        get => _isPaused;
+        private set
+        {
+            if (!SetProperty(ref _isPaused, value)) return;
+            OnPropertyChanged(nameof(ScanActivityActive));
+            OnPropertyChanged(nameof(ScanStatusLabel));
+            OnPropertyChanged(nameof(PcStatusLabel));
+            OnPropertyChanged(nameof(PcStatusDetail));
+            OnPropertyChanged(nameof(PcStatusTone));
+            OnPropertyChanged(nameof(ScanStatusDetail));
+            OnPropertyChanged(nameof(FindingsEmptyText));
+            PauseScanCommand?.RaiseCanExecuteChanged();
+            ResumeScanCommand?.RaiseCanExecuteChanged();
+        }
+    }
+
+    public bool ScanActivityActive => IsScanning && !IsPaused;
+
+    private void CancelScan()
+    {
+        if (!IsScanning) return;
+        _pauseController?.Resume();
+        _scanCts?.Cancel();
+        ScanSummaryText = "Cancelling the scan and waiting for the current file operation to stop...";
+        OnPropertyChanged(nameof(ScanStatusDetail));
+    }
     private void ApplyProgress(ScanProgress progress)
     {
         FilesChecked = progress.FilesChecked;
@@ -649,10 +1174,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(LuaFilesCheckedText));
         OnPropertyChanged(nameof(ReparseSkippedText));
         OnPropertyChanged(nameof(CloudFilesSkippedText));
+        OnPropertyChanged(nameof(JarFilesCheckedText));
     }
 
     public string LiveScanMetrics
-        => $"{LuaFilesCheckedText} Lua files checked · {ReparseSkippedText} reparse points skipped · {CloudFilesSkippedText} cloud placeholders skipped";
+        => $"{LuaFilesCheckedText} Lua files checked  |  {JarFilesCheckedText} JAR files seen  |  {ReparseSkippedText} reparse points skipped  |  {CloudFilesSkippedText} cloud placeholders skipped";
 
     public string LuaFilesCheckedText => AppFormat.Count(_luaFilesChecked);
     public string ReparseSkippedText => AppFormat.Count(_reparsePointsSkipped);
@@ -673,6 +1199,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         CurrentPath = string.Empty;
         _luaFilesChecked = outcome.LuaFilesChecked;
         _peFilesChecked = outcome.PeFilesChecked;
+        _jarFilesChecked = outcome.JarFilesChecked;
+        _minecraftArchivesInspected = outcome.MinecraftArchivesInspected;
+        _minecraftModsReviewed = outcome.MinecraftModsReviewed;
         _hashChecksPerformed = outcome.HashChecksPerformed;
         _signatureChecksPerformed = outcome.SignatureChecksPerformed;
         _reparsePointsSkipped = outcome.ReparsePointsSkipped;
@@ -680,6 +1209,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         FindingLimitReached = outcome.FindingLimitReached;
         InaccessibleTruncationNote = outcome.InaccessibleListTruncated
             ? $"The list below shows the first {AppFormat.Count(outcome.InaccessibleAreas.Count)} of {AppFormat.Count(outcome.InaccessibleTotal)} inaccessible items. The count is complete; the path list is capped for display."
+            : string.Empty;
+        ArchiveTruncationNote = outcome.ArchiveListTruncated
+            ? $"The list shows the first {AppFormat.Count(outcome.ArchiveIssues.Count)} of {AppFormat.Count(outcome.ArchiveIssueTotal)} archives that could not be checked."
             : string.Empty;
 
         Findings.Clear();
@@ -693,16 +1225,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         InaccessibleAreas.Clear();
         foreach (var area in outcome.InaccessibleAreas) InaccessibleAreas.Add(area);
+        ArchiveIssues.Clear();
+        foreach (var issue in outcome.ArchiveIssues) ArchiveIssues.Add(issue);
+        OnPropertyChanged(nameof(ArchiveIssueCountText));
+        OnPropertyChanged(nameof(ArchiveTruncationNote));
 
         HasScanOutcome = true;
         ScanElapsedText = AppFormat.Duration(outcome.Duration);
-        LastScanText = $"{(outcome.Cancelled ? "Stopped" : "Completed")} {AppFormat.Date(outcome.CompletedUtc)} · {AppFormat.Duration(outcome.Duration)}";
-        ScannedAreasDisplay = string.Join("  ·  ", outcome.Roots);
+        LastScanText = $"{(outcome.Cancelled ? "Stopped" : "Completed")} {AppFormat.Date(outcome.CompletedUtc)}  |  {AppFormat.Duration(outcome.Duration)}";
+        ScannedAreasDisplay = string.Join("   |   ", outcome.Roots);
         var high = outcome.Findings.Count(f => f.Risk == RiskLevel.High);
         var medium = outcome.Findings.Count(f => f.Risk == RiskLevel.Medium);
         var low = outcome.Findings.Count - high - medium;
         var limitNote = outcome.FindingLimitReached
-            ? " The finding display reached its 1,000-item cap; additional matches were not listed."
+            ? " The finding display reached its configured limit; additional matches were not listed."
             : string.Empty;
         var inaccessibleNote = outcome.InaccessibleTotal > 0
             ? $" {AppFormat.Count(outcome.InaccessibleTotal)} file{(outcome.InaccessibleTotal == 1 ? "" : "s")} or folder{(outcome.InaccessibleTotal == 1 ? "" : "s")} could not be fully read."
@@ -710,10 +1246,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         var hashNote = _indicators.HasKnownHashes
             ? $" {AppFormat.Count(outcome.HashChecksPerformed)} SHA-256 checks were performed."
             : " No known-hash list is configured in this build, so hash matching was not used.";
+        var minecraftNote = outcome.JarFilesChecked > 0
+            ? $" Minecraft: {AppFormat.Count(outcome.MinecraftArchivesInspected)} JAR archives inspected, {AppFormat.Count(outcome.MinecraftModsReviewed)} mod review items, {AppFormat.Count(outcome.KnownCheatCount)} known cheat indicator{(outcome.KnownCheatCount == 1 ? "" : "s")}."
+            : string.Empty;
+        var archiveNote = outcome.ArchiveIssueTotal > 0
+            ? $" {AppFormat.Count(outcome.ArchiveIssueTotal)} archive{(outcome.ArchiveIssueTotal == 1 ? "" : "s")} could not be checked."
+            : string.Empty;
         ScanSummaryText = outcome.Cancelled
-            ? $"The scan was cancelled after checking {AppFormat.Count(outcome.FilesChecked)} files. Results are partial.{inaccessibleNote}{limitNote}"
+            ? $"The scan was cancelled after checking {AppFormat.Count(outcome.FilesChecked)} files. Results are partial.{inaccessibleNote}{archiveNote}{limitNote}"
             : $"Checked {AppFormat.Count(outcome.FilesChecked)} files in {AppFormat.Duration(outcome.Duration)}. " +
-              $"{high} high, {medium} medium, and {low} low or informational item{(outcome.Findings.Count == 1 ? "" : "s")} were flagged.{inaccessibleNote}{limitNote}{hashNote} " +
+              $"{high} high, {medium} medium, and {low} low or informational item{(outcome.Findings.Count == 1 ? "" : "s")} were flagged.{minecraftNote}{inaccessibleNote}{archiveNote}{limitNote}{hashNote} " +
               "This does not guarantee that the PC is clean.";
 
         RaiseScanCounters();
@@ -724,16 +1266,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SignatureChecksText));
         OnPropertyChanged(nameof(ReparseSkippedText));
         OnPropertyChanged(nameof(CloudFilesSkippedText));
+        OnPropertyChanged(nameof(JarFilesCheckedText));
+        OnPropertyChanged(nameof(MinecraftArchivesText));
+        OnPropertyChanged(nameof(MinecraftModsReviewedText));
+        OnPropertyChanged(nameof(MinecraftSummaryText));
+        OnPropertyChanged(nameof(ArchiveIssueCountText));
+        OnPropertyChanged(nameof(HasArchiveIssues));
+        OnPropertyChanged(nameof(HasMinecraftScanData));
         OnPropertyChanged(nameof(ShowResults));
         CloseResultsCommand.RaiseCanExecuteChanged();
-    }
-
-    private void CancelScan()
-    {
-        if (!IsScanning) return;
-        _scanCts?.Cancel();
-        ScanSummaryText = "Cancelling the scan and waiting for the current file operation to stop…";
-        OnPropertyChanged(nameof(ScanStatusDetail));
     }
 
     private void CloseResults()
@@ -751,13 +1292,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         Findings.Clear();
         InaccessibleAreas.Clear();
+        ArchiveIssues.Clear();
         InaccessibleTruncationNote = string.Empty;
+        ArchiveTruncationNote = string.Empty;
         InaccessibleCount = 0;
         FilesChecked = 0;
         DirectoriesChecked = 0;
         FindingLimitReached = false;
         _peFilesChecked = 0;
         _luaFilesChecked = 0;
+        _jarFilesChecked = 0;
+        _minecraftArchivesInspected = 0;
+        _minecraftModsReviewed = 0;
         _hashChecksPerformed = 0;
         _signatureChecksPerformed = 0;
         _reparsePointsSkipped = 0;
@@ -778,6 +1324,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SignatureChecksText));
         OnPropertyChanged(nameof(ReparseSkippedText));
         OnPropertyChanged(nameof(CloudFilesSkippedText));
+        OnPropertyChanged(nameof(JarFilesCheckedText));
+        OnPropertyChanged(nameof(MinecraftArchivesText));
+        OnPropertyChanged(nameof(MinecraftModsReviewedText));
+        OnPropertyChanged(nameof(MinecraftSummaryText));
+        OnPropertyChanged(nameof(ArchiveIssueCountText));
+        OnPropertyChanged(nameof(HasArchiveIssues));
+        OnPropertyChanged(nameof(HasMinecraftScanData));
         OnPropertyChanged(nameof(ShowResults));
     }
 
@@ -849,6 +1402,91 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             MessageDialog.Show(Owner, "Location unavailable", error, "OK", null, warning: true);
     }
 
+    private void OpenProcessLocation(RunningProcessInfo? process)
+    {
+        if (process?.ExecutablePath is null)
+        {
+            MessageDialog.Show(Owner, "No executable path",
+                "Windows did not expose a path for this process, usually because it is protected. WTX PC CHECK does not inspect process memory.",
+                "OK", null);
+            return;
+        }
+
+        var confirmed = MessageDialog.Show(Owner, "Open File Location",
+            "This opens File Explorer with the running executable selected. WTX PC CHECK will not run, change, delete, or quarantine the file.",
+            "Open File Location", "Cancel", warning: process.Risk >= RiskLevel.Medium);
+        if (!confirmed) return;
+        if (!WindowsIntegration.OpenFileLocation(process.ExecutablePath, out var error))
+            MessageDialog.Show(Owner, "Location unavailable", error, "OK", null, warning: true);
+    }
+    private void AddDefenderDetectionFindings(DefenderScanResult result)
+    {
+        if (result.Detections.Count == 0) return;
+        var added = 0;
+        foreach (var detection in result.Detections)
+        {
+            foreach (var path in detection.Resources.Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (Findings.Any(f => f.FullPath.Equals(path, StringComparison.OrdinalIgnoreCase) &&
+                                      f.Classification == FindingClassification.MalwareDetectedByWindowsSecurity))
+                    continue;
+
+                FileInfo? info = null;
+                try { info = new FileInfo(path); } catch { }
+                SignatureInfo signature = SignatureInfo.NotChecked("Signature verification was not needed for this Defender detection.");
+                if (FileRules.IsPeFile(path))
+                {
+                    signature = SignatureService.Verify(path);
+                    _signatureChecksPerformed++;
+                }
+
+                string? hash = null;
+                string? hashNote = null;
+                var size = info?.Exists == true ? info.Length : 0;
+                if (info?.Exists == true && size <= HashService.MaxHashBytes)
+                {
+                    var hashResult = HashService.TryComputeSha256(path, size, CancellationToken.None);
+                    _hashChecksPerformed++;
+                    if (hashResult.Success) hash = hashResult.Sha256;
+                    else hashNote = hashResult.Note;
+                }
+
+                var modified = info?.Exists == true ? info.LastWriteTimeUtc : DateTime.UtcNow;
+                Findings.Add(new ScanFinding
+                {
+                    FileName = Path.GetFileName(path),
+                    FullPath = path,
+                    FileType = FileRules.FileTypeLabel(path),
+                    Explanation = "Windows Security recorded a malware detection for this file during the Defender scan. WTX PC CHECK did not create the detection, execute the file, or remove or quarantine it. Open Windows Security for Defender's own threat details.",
+                    DetectionMethod = "Windows Defender detection record queried read-only after the Defender scan.",
+                    Limitations = "Defender's detection record may be delayed, may refer to a resource inside an archive, or may require elevation to display fully. WTX PC CHECK does not verify Defender's verdict independently.",
+                    Category = FindingCategory.SecurityObservation,
+                    Classification = FindingClassification.MalwareDetectedByWindowsSecurity,
+                    Confidence = ConfidenceLevel.High,
+                    Evidence = $"Windows Defender recorded a detection for this resource (Threat ID {detection.ThreatId})" +
+                               (detection.DetectedUtc is null ? "." : $" at {AppFormat.Date(detection.DetectedUtc.Value)}."),
+                    Risk = RiskLevel.High,
+                    SizeBytes = size,
+                    ModifiedUtc = modified,
+                    Signature = signature,
+                    Sha256 = hash,
+                    HashNote = hashNote,
+                    MatchedRule = $"Windows Defender threat ID {detection.ThreatId}",
+                    IsScriptFile = FileRules.IsLuaFile(path)
+                });
+                added++;
+            }
+        }
+
+        if (added == 0) return;
+        HasScanOutcome = true;
+        if (!IsScanning) ScanState = ScanUiState.Completed;
+        LastScanText = $"Windows Defender detection record | {AppFormat.Date(DateTime.Now)}";
+        ScanSummaryText = $"{added} file{(added == 1 ? "" : "s")} were reported by Windows Defender as malware detections. Review them in Windows Security and in the findings below. This does not remove or quarantine anything.";
+        RaiseScanCounters();
+        OnPropertyChanged(nameof(HasVisibleFindings));
+        OnPropertyChanged(nameof(ShowResults));
+    }
     public bool IsDefenderScanning { get; private set; }
     public DefenderScanResult DefenderResult
     {
@@ -910,13 +1548,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             StartedUtc = DateTimeOffset.UtcNow
         };
         _defenderCurrentRoot = localRoots[0];
-        DefenderProgressText = $"Windows Defender is scanning {_defenderCurrentRoot} · 0s";
+        DefenderProgressText = $"Windows Defender is scanning {_defenderCurrentRoot}  |  0s";
 
         var progress = new Progress<DefenderProgress>(value =>
         {
             if (!IsDefenderScanning) return;
             _defenderCurrentRoot = value.CurrentRoot;
-            DefenderProgressText = $"Windows Defender is scanning {value.CurrentRoot} ({value.CurrentRootIndex} of {value.TotalRoots}) · {AppFormat.Duration(value.Elapsed)}";
+            DefenderProgressText = $"Windows Defender is scanning {value.CurrentRoot} ({value.CurrentRootIndex} of {value.TotalRoots})  |  {AppFormat.Duration(value.Elapsed)}";
         });
 
         try
@@ -974,7 +1612,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (!IsDefenderScanning) return;
         _defenderCts?.Cancel();
-        DefenderProgressText = "Cancelling the Windows Defender scan…";
+        DefenderProgressText = "Cancelling the Windows Defender scan...";
     }
 
     private void RaiseBusyCommands()
@@ -1020,16 +1658,19 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasStartupEntries));
         OnPropertyChanged(nameof(StartupSummaryText));
         OnPropertyChanged(nameof(StartupNote));
+        OnPropertyChanged(nameof(Processes));
+        OnPropertyChanged(nameof(ProcessSummaryText));
+        OnPropertyChanged(nameof(ProcessNote));
         OnPropertyChanged(nameof(SecurityErrorText));
     }
 
-    public string WindowsStatusText => $"{Security.WindowsDisplay} · {Security.WindowsBuildDisplay}";
+    public string WindowsStatusText => $"{Security.WindowsDisplay}  |  {Security.WindowsBuildDisplay}";
     public string WindowsSupportText => Security.WindowsSupported
         ? "Windows 10 22H2 or Windows 11 is supported."
         : "This Windows version is older than the supported target. Some checks may be unavailable.";
     public string DefenderStatusText => Security.State is SecurityQueryState.NotChecked
         ? "Not checked yet"
-        : Security.State is SecurityQueryState.Checking ? "Checking…" : Security.Defender.Summary;
+        : Security.State is SecurityQueryState.Checking ? "Checking..." : Security.Defender.Summary;
     public string DefenderDetailText
     {
         get
@@ -1041,22 +1682,22 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (Security.Defender.SignatureVersion is not null) parts.Add($"Signature {Security.Defender.SignatureVersion}");
             if (Security.Defender.SignatureUpdated is not null) parts.Add($"Updated {AppFormat.Date(Security.Defender.SignatureUpdated.Value)}");
             if (Security.Defender.TamperProtectionEnabled == true) parts.Add("Tamper protection on");
-            return parts.Count > 0 ? string.Join(" · ", parts) : Security.Defender.Note;
+            return parts.Count > 0 ? string.Join("  |  ", parts) : Security.Defender.Note;
         }
     }
     public string FirewallStatusText => Security.State is SecurityQueryState.NotChecked
         ? "Not checked yet"
-        : Security.State is SecurityQueryState.Checking ? "Checking…" : Security.Firewall.Summary;
+        : Security.State is SecurityQueryState.Checking ? "Checking..." : Security.Firewall.Summary;
     public string FirewallDetailText => Security.State is SecurityQueryState.NotChecked
         ? "Windows Firewall status will appear after the check."
         : Security.State is SecurityQueryState.Checking
             ? "Reading status from Windows Firewall."
             : Security.Firewall.Available
-                ? $"Domain: {OnOff(Security.Firewall.DomainEnabled)} · Private: {OnOff(Security.Firewall.PrivateEnabled)} · Public: {OnOff(Security.Firewall.PublicEnabled)}"
+                ? $"Domain: {OnOff(Security.Firewall.DomainEnabled)}  |  Private: {OnOff(Security.Firewall.PrivateEnabled)}  |  Public: {OnOff(Security.Firewall.PublicEnabled)}"
                 : Security.Firewall.Note;
     public string UpdatesStatusText => Security.State is SecurityQueryState.NotChecked
         ? "Not checked yet"
-        : Security.State is SecurityQueryState.Checking ? "Checking…" : Security.Updates.Summary;
+        : Security.State is SecurityQueryState.Checking ? "Checking..." : Security.Updates.Summary;
     public string UpdatesDetailText => Security.State is SecurityQueryState.NotChecked
         ? "A Windows Update search will run separately from the file scan."
         : Security.State is SecurityQueryState.Checking
@@ -1064,7 +1705,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             : Security.Updates.Note;
     public string SecurityCheckedText => Security.State switch
     {
-        SecurityQueryState.Checking => "Checking Windows security status…",
+        SecurityQueryState.Checking => "Checking Windows security status...",
         SecurityQueryState.Available when Security.CheckedUtc is not null => $"Checked {AppFormat.Relative(Security.CheckedUtc)}",
         SecurityQueryState.Unavailable => "Security status is partially unavailable.",
         _ => "Security status has not been checked yet."
@@ -1086,7 +1727,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string RegisteredAntivirusText => Security.State is SecurityQueryState.NotChecked
         ? "Antivirus registration will appear after the check."
         : Security.State is SecurityQueryState.Checking
-            ? "Reading registered antivirus products…"
+            ? "Reading registered antivirus products..."
             : Security.RegisteredAntivirus.Count == 0
                 ? "No antivirus product was listed by Windows Security."
                 : $"Registered with Windows Security: {string.Join(", ", Security.RegisteredAntivirus)}";
@@ -1097,6 +1738,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         : $"{Security.StartupEntryCount} startup entr{(Security.StartupEntryCount == 1 ? "y" : "ies")} found in the locations checked." +
           (Security.StartupListTruncated ? " The list is capped at 50 entries." : "");
     public string StartupNote => Security.StartupNote;
+    public IReadOnlyList<RunningProcessInfo> Processes => Security.Processes;
+    public string ProcessSummaryText => Security.ProcessCount == 0
+        ? "No running-process snapshot is available."
+        : $"{AppFormat.Count(Security.ProcessCount)} processes visible; {AppFormat.Count(Security.Processes.Count(p => p.Risk >= RiskLevel.Medium))} need review." +
+          (Security.ProcessListTruncated ? " The displayed list is capped." : "");
+    public string ProcessNote => Security.ProcessNote;
     public string SecurityErrorText => Security.ErrorEnglish ?? string.Empty;
 
     private static string OnOff(bool? value) => value switch
@@ -1292,12 +1939,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         UpdateState.NotConfigured => "Not configured",
         UpdateState.Disabled => "Off",
-        UpdateState.Checking => "Checking…",
+        UpdateState.Checking => "Checking...",
         UpdateState.UpToDate => "Up to date",
-        UpdateState.Downloading => "Downloading…",
+        UpdateState.Downloading => "Downloading...",
         UpdateState.ReadyToInstall => "Update ready",
         UpdateState.Failed => "Update failed",
-        UpdateState.Applying => "Installing…",
+        UpdateState.Applying => "Installing...",
         _ => "Not checked"
     };
     public string UpdateTone => Update.State switch
@@ -1440,7 +2087,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _updateBusy = true;
         OnPropertyChanged(nameof(IsUpdateBusy));
         CheckUpdatesCommand.RaiseCanExecuteChanged();
-        SetUpdate(UpdateState.Downloading, $"Downloading update {manifest.Version}…", manifest.Version);
+        SetUpdate(UpdateState.Downloading, $"Downloading update {manifest.Version}...", manifest.Version);
         _updateCts?.Dispose();
         _updateCts = new CancellationTokenSource();
         var token = _updateCts.Token;
@@ -1514,8 +2161,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsUpdateBusy));
         CheckUpdatesCommand.RaiseCanExecuteChanged();
         SetUpdate(UpdateState.Checking, automatic
-            ? "Checking for updates automatically…"
-            : "Checking for updates…");
+            ? "Checking for updates automatically..."
+            : "Checking for updates...");
         _updateCts?.Dispose();
         _updateCts = new CancellationTokenSource();
         var token = _updateCts.Token;
@@ -1633,7 +2280,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private async Task ApplyStagedUpdateAsync()
     {
         if (!CanInstallUpdate || _pendingStagedPath is null || _pendingSha256 is null) return;
-        SetUpdate(UpdateState.Applying, "Preparing to restart and install the verified update…", _pendingVersion);
+        SetUpdate(UpdateState.Applying, "Preparing to restart and install the verified update...", _pendingVersion);
         var (started, error) = await _updateApplyService.StartApplyAsync(
             _pendingStagedPath, _pendingSha256, _pendingVersion ?? "unknown", CancellationToken.None);
         if (!started)
@@ -1675,6 +2322,42 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         foreach (var drive in Drives) drive.PropertyChanged -= DriveOnPropertyChanged;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -357,7 +357,7 @@
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
+                    <WrapPanel Orientation="Horizontal" />
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
@@ -467,7 +467,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Expander">
                     <StackPanel>
-                        <ToggleButton x:Name="HeaderSite" Content="{TemplateBinding Header}" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Cursor="Hand" FocusVisualStyle="{StaticResource FocusRing}">
+                        <ToggleButton x:Name="HeaderSite" Content="{TemplateBinding Header}" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Cursor="Hand" FocusVisualStyle="{StaticResource FocusRing}" AutomationProperties.Name="{Binding Tag, RelativeSource={RelativeSource AncestorType=Expander}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
                                     <Border Background="Transparent" Padding="0,4">
@@ -586,6 +586,8 @@
     </Style>
 
 </ResourceDictionary>
+
+
 
 
 

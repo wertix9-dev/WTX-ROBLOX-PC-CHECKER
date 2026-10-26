@@ -1,12 +1,12 @@
-# WTX ROBLOX PC CHECKER
+# WTX PC CHECK
 
-**WTX PC CHECK - Made by WERTIX**
+**Made by WERTIX**
 
-GitHub repository name: **WTX ROBLOX PC CHECKER**. The application and its executable keep the product name **WTX PC CHECK** (`WTX-PC-CHECK.exe`).
+WTX PC CHECK is a defensive, local PC-check application for Windows 10 version 22H2 and Windows 11 on x64. It helps users review selected locations for Roblox executor indicators, Minecraft cheat-client indicators and mods, and signs of malware, including trojans. It is built to support a safer, fairer gaming community.
 
-WTX PC CHECK is a defensive, local PC-check application for Windows 10 version 22H2 and Windows 11 on x64. It reviews selected drives for Roblox executor indicators, Lua script risk signals, and basic Windows security gaps, and explains the limits of every result.
+The application is built with C#, WPF, and .NET 10. It does not execute, modify, delete, move, or quarantine discovered files, and it never guarantees that a PC is clean.
 
-The application is built with C#, WPF, and .NET 10. It never runs, modifies, deletes, moves, or quarantines a discovered file and never guarantees that a PC is clean.
+GitHub repository name from the project setup: **WTX ROBLOX PC CHECKER**.
 
 ## Run the published application
 
@@ -24,10 +24,10 @@ It is self-contained for Windows x64; the user does not need to install .NET or 
 
 Delivered binary for this build:
 
-- Size: 61,583,683 bytes (58.7 MB)
-- SHA-256: `4C625785DBA1053E44AC5ED15D00619649A80892EC8D1F05821DA9211AAAA0D3`
+- **Size:** 61,609,057 bytes (58.8 MB)
+- **SHA-256:** `B5A12ECAEC2411BA6E3EB24DDA5E3ED6499F9E0603C139618802FC22422EB3D6`
 
-The delivered EXE is not Authenticode-signed because no code-signing certificate or key was provided for this build. Windows SmartScreen may therefore warn about an unknown publisher. Update packages themselves are still rejected unless they have a valid signature from the configured pinned publisher certificate.
+The delivered EXE is not Authenticode-signed because no code-signing certificate or key was provided. Windows SmartScreen may warn about an unknown publisher. Update packages themselves are still rejected unless they have a valid signature from the configured pinned publisher certificate.
 
 ## Build from source
 
@@ -43,7 +43,7 @@ From the repository root:
 .\build.ps1
 ```
 
-or directly:
+Or directly:
 
 ```powershell
 dotnet publish .\src\WTX-PC-CHECK\WTX-PC-CHECK.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:DebugSymbols=false -o .\publish
@@ -53,73 +53,136 @@ Output:
 
 `publish\WTX-PC-CHECK.exe`
 
-The build uses a single-file, self-contained publish. `IncludeNativeLibrariesForSelfExtract` is required by WPF's native components; those native files are extracted to a temporary directory by .NET at start-up.
+The build is a single-file, self-contained publish. `IncludeNativeLibrariesForSelfExtract` is required by WPF's native components; .NET extracts those native files to a temporary directory at start-up.
 
-## What is implemented
+## Navigation and start-up
 
-### Branding and start-up
+- Animated start-up screen with **WTX PC CHECK**, **Made by WERTIX**, a lightweight scan ring, and real English status messages such as **Loading settings...** and **Checking for updates...**.
+- No fake percentages and no artificial delay. The splash closes as soon as settings and the optional update check are ready. Failures are explained and the app continues offline.
+- Left navigation rail: **Dashboard**, **Roblox PC Check**, **Minecraft PC Check**, **Full PC Check**, **Settings**, **About**.
+- The About page repeats the branding, version, privacy, purpose, detection limits, and update configuration placeholders.
 
-- Animated start-up screen with **WTX PC CHECK**, **Made by WERTIX**, a lightweight scan-ring animation, and real start-up status messages.
-- No invented percentage and no artificial start-up delay. The splash closes as soon as settings and the optional update check are finished.
-- If update checking fails or the update source is not configured, the app continues offline and displays an English status message.
+## Scan profiles, categories, and locations
 
-### Privacy confirmation
+Available profiles:
 
-A blocking **Privacy & Purpose** dialog appears before every file scan and every Windows Defender scan. It contains the required purpose, data-handling, updater, and detection-limit text. **Start Scan** is disabled until **I understand and want to scan this PC** is checked.
+- **Roblox Scan** - Roblox indicators and Lua review in detected Roblox/common folders.
+- **Minecraft Scan** - Minecraft JAR/mod review and known cheat-client indicators in detected Minecraft/launcher/common folders.
+- **Quick Scan** - all file categories in common and detected game folders, without scanning full drives.
+- **Full PC Scan** - all categories on all selected fixed drives by default, with removable/network drives opt-in.
+- **Custom Folder Scan** - only the folders the user adds, with selectable categories.
 
-### Scan
+Users can select individual categories:
 
-- Selects all fixed local drives by default. Removable and network drives can be selected explicitly.
-- Recursively scans subfolders, including hidden and system files where Windows permits access.
-- Reports the actual number of files and folders checked, elapsed time, current path, finding count, and inaccessible count.
-- Records inaccessible files and folders with English reasons for permission denial, locks, long paths, disconnected drives, and similar limitations.
-- Handles reparse-point folders safely (skips them and reports the count) and does not download cloud-only placeholder contents.
-- Keeps all findings in memory only. There is no scan history page, no persisted finding list, no telemetry, no analytics, and no crash reporting.
-- Reading a `.lua`/`.luau` file is limited to a static 256 KB text search. Scripts are never executed.
+- Roblox executor programs and related components
+- Lua and Luau script review
+- Minecraft JAR files and mod folders
+- Known Minecraft cheat-client indicators
+- Windows security, startup entries, and running processes
 
-### Detection and review
+Users can select locations before starting:
 
-- Explainable local indicators: executable names, folder locations, digital signatures, Roblox proxy-DLL names, optional SHA-256 matches, and Lua API-name patterns.
-- `.lua` and `.luau` files are classified separately as **Script review**, not automatically as executors or malware.
-- Each finding includes file name, full path, type, size, modified date, risk, explanation, detection method, limitations, signature status, and SHA-256 when available.
-- **View Details** and **Open File Location** are provided. File Explorer is opened only after a warning; the app never runs the file.
-- Script details include an optional read-only text preview. A confirmation is required, and the preview is never executed.
+- Fixed, removable, and network drives. Full PC Scan selects all fixed drives by default; any drive can be deselected.
+- Common user folders: Downloads, Desktop, and temporary files.
+- Detected game/launcher folders. These are displayed with labels and paths and included only when checked.
+- Custom folders added through the Windows folder picker.
 
-### Windows security overview
+The profile card explains exactly which categories and locations will be checked. A privacy confirmation is shown before every scan.
 
-- Windows version and build.
-- Defender status, real-time protection state, signature version, and optional tamper-protection state.
-- Windows Firewall state for Domain, Private, and Public profiles.
-- Pending updates offered by Windows Update, with security-update counts where Windows exposes them.
-- Startup entries from common Run keys and Startup folders, with resolved executable path, signature status, and risk rationale. The app does not evaluate Windows StartupApproved state, scheduled tasks, or services, so an entry may be present but disabled. Startup command lines are shown as recorded and are not executed; only the executable path is resolved.
-- These checks are shown separately from file findings and are not presented as confirmed malware.
+## Roblox checks
 
-### Windows Defender scans
+- Treats executors as standalone programs and possible associated components such as executable files and libraries.
+- Uses explainable local indicators: file name, folder location, Roblox proxy-DLL patterns, Authenticode signature status, optional local SHA-256 indicators, and limited static Lua text.
+- A file name or folder match is never presented as proof. Findings are classified as potentially suspicious unless a stronger local indicator is available.
+- `.lua`/`.luau` scripts are reviewed separately as static text (up to 256 KB per file). Scripts are never executed and are not automatically classified as malware or an executor.
+- Roblox folders are detected under the user profile and shown for confirmation; users can add any other folder.
 
-- An explicit **Run Defender scan** action starts a real Windows Defender custom scan of the selected local drives using `MpCmdRun.exe -ScanType 3 -DisableRemediation`.
-- A custom scan can be very long; progress text shows the current drive, drive count, and elapsed time. Cancellation is available.
-- WTX PC CHECK reports Defender's exit result rather than inventing detection names. It tells the user to open Windows Security for Defender's own details. If the scan cannot start, the English explanation and **Open Windows Security** action are provided.
-- Real-time protection may still act according to Windows settings; WTX PC CHECK does not change Defender policy and does not request administrator rights.
+## Minecraft checks
 
-### Updater
+- Detects `.minecraft`, Prism Launcher, Modrinth launcher, MultiMC, ATLauncher, CurseForge, Technic, and GDLauncher folders when present, and shows them for confirmation.
+- Inspects `.jar` archives statically as ZIP containers: manifest, Fabric/Quilt/Forge/NeoForge metadata, mod names, selected entry names, Java signature-entry presence, and known cheat-client tokens.
+- Archives are never extracted to disk or executed.
+- Limits: 100 MB archive size, 20,000 entries, 512 KB per metadata entry, 500 MB total uncompressed size. Unreadable, locked, cloud-only, oversized, or over-limit archives are listed separately as archives that could not be checked.
+- Classifications include **Known Cheat Client**, **Potentially Suspicious**, **Malware Detected by Windows Security**, **Unknown File**, and **Likely Legitimate Mod**.
+- An unfamiliar mod is not labelled malicious merely because it is unknown. A JAR with recognizable mod metadata and no known indicator is reported as a likely legitimate mod with a clear limitation; metadata is not a safety guarantee.
 
-- Configurable automatic update checks on start-up and every 1, 6, 12, or 24 hours.
-- Automatic updates can be turned off in Settings. Manual checking remains available.
-- Updates are downloaded only over HTTPS, with a maximum size, into a temporary staging directory.
-- The updater verifies all of the following before staging:
-  - the manifest version is newer;
-  - the download URL is HTTPS without embedded credentials;
-  - the SHA-256 hash matches;
-  - the Authenticode signature is valid;
-  - the signer certificate SHA-256 thumbprint matches the configured pin;
-  - the file version matches the manifest.
-- It asks before restarting. On approval, a helper waits for WTX PC CHECK to exit, backs up the current EXE, replaces it, starts the new version, and verifies that it remains running. On failure it restores and reopens the previous version.
-- No update is installed covertly. No administrator prompt is raised.
-- No scan data is sent to the update server. Requests contain only a user agent and the manifest/download request.
+## Findings
 
-## Update source and signing configuration
+Every finding includes:
 
-**The update source is intentionally not configured in this delivery.** The following placeholders are present in `src/WTX-PC-CHECK/AppInfo.cs`:
+- File name, full path, type, size, and modified date
+- Risk level, classification, and confidence
+- Evidence and a plain-English explanation
+- Detection method and limitations
+- Digital signature status when applicable
+- SHA-256 when available
+
+Actions:
+
+- **View Details** opens a full review window.
+- **Open File Location** opens File Explorer only after a warning and never runs the selected file.
+- Lua/Luau findings can show a confirmation-gated, read-only script preview. Scripts are never executed.
+- The app does not offer an action that runs, modifies, deletes, moves, or quarantines files.
+
+## Windows security and processes
+
+The app shows Windows version/build, Defender state, real-time protection, signature information, firewall profiles, Windows Update counts, startup entries, and a read-only running-process snapshot.
+
+Running-process checks show:
+
+- Process name and PID
+- Executable path when Windows exposes it
+- Publisher certificate subject and signature status
+- Review rationale for known names, unsigned user-writable executables, or invalid signatures
+
+Process checks use only process metadata, the executable path, and Authenticode verification. WTX PC CHECK does **not** inspect process memory, inject code, stop processes, or modify files. Protected processes may not expose a path, and the displayed list is capped with a visible note.
+
+Startup entries are limited to common Run keys and Startup folders. Windows StartupApproved state, scheduled tasks, and services are not evaluated, so an existing entry may be disabled. Command lines are displayed as recorded and are not executed.
+
+These checks are separate from file findings and never presented as confirmed malware.
+
+## Windows Defender
+
+- **Run Defender scan** starts a real Windows Defender custom scan of the selected local drives using `MpCmdRun.exe -ScanType 3 -DisableRemediation`.
+- A custom Defender scan can take a long time; the app shows the current drive and elapsed time, and allows cancellation. Windows Defender scans can be cancelled but not paused.
+- WTX PC CHECK reports Defender's exit status rather than inventing detection names.
+- When Defender records detection resources after the scan, the app queries those records read-only and adds them as findings classified **Malware Detected by Windows Security**, with the actual resource path and Defender threat ID.
+- If Defender details cannot be read, the app says so and offers **Open Windows Security**.
+- WTX PC CHECK never changes Defender policy. Real-time protection may act according to Windows settings. No administrator prompt is raised.
+
+## Pause and cancellation
+
+- Local file scans can be paused and resumed at file boundaries; the scan line stops while paused and resumes only when scanning continues.
+- Cancellation stops the current local scan and keeps any partial results with a clear incomplete label.
+- The actual file count, folders checked, current path, finding count, and inaccessible count are shown. No percentage is invented.
+- Inaccessible folders and files are reported with English reasons for permissions, locks, long paths, disconnected drives, and similar limitations.
+
+## Privacy
+
+- Files, names, paths, contents, hashes, findings, and scan reports are never uploaded or persisted by WTX PC CHECK.
+- Results exist in memory until **Close results** is used or the app exits.
+- The only persisted preferences are automatic-update choices, update interval, reduced-motion choice, and the last update-check time.
+- Settings: `%LOCALAPPDATA%\WTX PC CHECK\settings.json`.
+- Staging: `%TEMP%\WTX PC CHECK\updates`.
+- No telemetry, analytics, crash reports, cloud hash lookup, or scan history.
+- The only network requests made by the app itself are update checks/downloads against the configured HTTPS source. Windows Update and Defender may contact Microsoft according to Windows settings; no scan data is sent by WTX PC CHECK in those operations.
+
+## Detection limits
+
+- WTX PC CHECK is not an antivirus replacement and never guarantees that a PC is clean.
+- Name, folder, and metadata matches can flag legitimate software. They are indicators, not proof.
+- Executors and cheat clients can be renamed, packed, signed by another publisher, or missed entirely.
+- Hash matching is implemented but inactive in this build until verified local hashes are added to `src/WTX-PC-CHECK/Data/KnownIndicators.json`.
+- Signature verification is performed on flagged executable/library candidates, not every file on a drive.
+- Lua analysis is a shallow static text search; obfuscation can hide behavior.
+- JAR analysis inspects metadata and entry names only, not decompiled or executed bytecode. Encrypted or over-limit archives may not be checked.
+- Files that are locked, encrypted, cloud-only, inside reparse-point folders, or blocked by permissions may not be inspected. Archives are not unpacked. Running processes are not memory-scanned.
+- Windows Update classification and Defender-detail visibility depend on what Windows exposes to a non-elevated process.
+- A clean result never proves that a PC is clean.
+
+## Updater configuration placeholders
+
+No real update URL, publisher certificate, or signing key is bundled. The following placeholders are in `src/WTX-PC-CHECK/AppInfo.cs`:
 
 ```csharp
 public const string UpdateManifestUrl = "https://updates.example.invalid/wtx-pc-check/update-manifest.json";
@@ -127,19 +190,20 @@ public const string UpdateSignerThumbprint = "REPLACE_WITH_64_HEX_CHARACTER_SHA2
 public const string UpdatePublisherName = "WERTIX";
 ```
 
-No real URL, certificate, or signing key is bundled or invented. Update checking remains disabled while these placeholders are present; the UI reports **Not configured** and the app continues offline.
+Update checking stays disabled while these placeholders remain. The UI reports **Not configured** and the app continues offline.
 
-To enable signed updates, the maintainer must:
+To enable updates, the maintainer must:
 
-1. Obtain an Authenticode code-signing certificate whose subject corresponds to the intended publisher.
+1. Obtain an Authenticode code-signing certificate for the intended publisher.
 2. Sign the `WTX-PC-CHECK.exe` release with that certificate.
-3. Set `UpdateManifestUrl` to a real HTTPS endpoint and `UpdateSignerThumbprint` to the certificate's SHA-256 thumbprint (64 hex characters).
-4. Serve a JSON manifest over HTTPS with this shape:
+3. Set `UpdateManifestUrl` to a real HTTPS endpoint.
+4. Set `UpdateSignerThumbprint` to the certificate's SHA-256 thumbprint (64 hex characters).
+5. Serve a JSON manifest over HTTPS with this shape:
 
 ```json
 {
-  "version": "1.1.0",
-  "url": "https://your-https-host.example/updates/WTX-PC-CHECK-1.1.0.exe",
+  "version": "1.2.0",
+  "url": "https://your-https-host.example/updates/WTX-PC-CHECK-1.2.0.exe",
   "sha256": "64_HEX_SHA256_OF_THE_EXE",
   "signerThumbprint": "64_HEX_SHA256_OF_THE_SIGNING_CERTIFICATE",
   "publisher": "WERTIX",
@@ -148,89 +212,52 @@ To enable signed updates, the maintainer must:
 }
 ```
 
-5. Rebuild with the real values. Keep the update EXE and manifest on HTTPS.
+6. Rebuild with the real values.
 
-The manifest itself is not signed; the EXE's Authenticode signature and the pinned certificate thumbprint are the authenticity boundary. A hash match alone is never accepted. Do not add a certificate pin that you have not verified independently.
+The updater validates all of the following: newer manifest version, HTTPS download without embedded credentials, SHA-256, valid Authenticode signature, pinned signer certificate thumbprint, and matching file version. It stages the update in a temporary folder, asks before restarting, waits for the app to exit, backs up the EXE, replaces it, verifies the new app remains running, and restores the previous version if installation fails. A hash alone is never accepted as authenticity.
 
-Windows code signing credentials are not part of this repository and must not be committed.
+Windows code-signing credentials are not part of this repository and must not be committed.
 
-## Known-hash list / indicator database
+## Indicator database
 
-The scan engine supports SHA-256 matching, but **this build bundles no third-party malware hashes** and does not fetch a cloud hash list. `src/WTX-PC-CHECK/Data/KnownIndicators.json` currently has an empty `knownHashes` array. The UI clearly reports that hash matching is inactive.
-
-Maintainers can add only independently verified entries and rebuild:
-
-```json
-{
-  "sha256": "64_HEX_SHA256",
-  "label": "Short explanation",
-  "description": "Why this hash is an indicator.",
-  "risk": "High"
-}
-```
-
-Name, folder, proxy-DLL, and Lua API-name rules are heuristics. They are not proof that a file is an executor or malware. Keep the explanations and limitations intact when maintaining the list.
-
-## Detection limits
-
-- WTX PC CHECK is not an antivirus replacement and does not claim that a PC is clean.
-- Name and folder matches can flag legitimate software. A file name alone is never treated as proof.
-- Executor binaries can be renamed, packed, signed by another publisher, or missed entirely.
-- Hash matching is inactive without a verified local list. No reputation or cloud analysis is used.
-- Signature verification is performed on flagged executable/library candidates, not every file on the drive.
-- Script analysis is static and shallow. Obfuscation can hide behavior; scripts are never executed.
-- Files that are locked, encrypted, access-denied, cloud-only, inside reparse-point folders, or on disconnected drives may not be inspected. Archives are not unpacked, and running processes are not memory-scanned.
-- Windows Update classification and Defender result details depend on what Windows exposes to a non-elevated process. The app reports counts and exit results, not fabricated detection names.
-- The app does not modify, move, delete, or quarantine files. Defender's real-time protection can still act according to Windows settings.
-
-## Privacy and local data
-
-- Files, file names, paths, hashes, contents, findings, and scan reports are never uploaded or persisted by WTX PC CHECK.
-- Results exist in memory until **Close results** is used or the app exits.
-- The only persisted preferences are:
-  - automatic updates on/off;
-  - update interval;
-  - reduced-motion choice;
-  - timestamp of the last update check.
-- Settings file: `%LOCALAPPDATA%\WTX PC CHECK\settings.json`.
-- Update staging uses `%TEMP%\WTX PC CHECK\updates`.
-- Windows Update and Defender may contact Microsoft according to Windows settings; the app sends no scan data in those operations.
-- The updater may contact the configured HTTPS update source. Standard connection information may be visible to that server, but no scan data is sent.
+`src/WTX-PC-CHECK/Data/KnownIndicators.json` contains the local Roblox, Minecraft, proxy-DLL, and Lua heuristic lists. No verified malware hashes are bundled. Add only independently verified SHA-256 entries and rebuild. Name and metadata rules are heuristics, so keep their explanations and limitations intact.
 
 ## Project layout
 
 ```
-src/WTX-PC-CHECK/                 WPF application source
+src/WTX-PC-CHECK/                 WPF source
   Assets/AppIcon.ico
-  Data/KnownIndicators.json      local indicator database (no hashes bundled)
-  Models/                        settings, drives, findings, security, updates
-  Services/                      scanner, signatures, hashing, security, updater
-  Themes/Theme.xaml              dark security dashboard theme
+  Data/KnownIndicators.json
+  Models/                        settings, findings, security, updates
+  Services/                      scan engine, JAR analyzer, signatures, updater
+  Themes/Theme.xaml
   ViewModels/MainViewModel.cs
-  Views/                         splash, privacy, detail, and message dialogs
+  Views/                         splash, privacy, details, message dialogs
   MainWindow.xaml(.cs)
-  Program.cs                     entry point and developer self-test modes
+  Program.cs                     entry point and self-test mode
   SelfTest.cs
 publish/WTX-PC-CHECK.exe          self-contained single-file build
-build.ps1                        publish script
+build.ps1                         publish script
 ```
 
 ## Verification
 
-The included self-test exercises version comparison, update configuration rejection, SHA-256 hashing, Authenticode verification, indicator loading, the scan engine on a harmless fixture, inaccessible-root reporting, cancellation, safe Lua preview, the disabled update source, rejection of unverified staged updates, and PowerShell parsing of the update helper script.
+The self-test covers version comparison, update configuration rejection, SHA-256 hashing, Authenticode verification, indicator loading, Roblox/Lua scan behavior, static Minecraft JAR analysis and classifications, inaccessible-root reporting, cancellation, safe Lua preview, disabled update source, rejection of unverified staged updates, and update-helper script parsing.
 
-```powershell
-$p = Start-Process .\publish\WTX-PC-CHECK.exe -ArgumentList '--self-test', '.\selftest.txt' -Wait -PassThru
-Get-Content .\selftest.txt
-if ($p.ExitCode -ne 0) { throw 'Self-test failed.' }
-```
+Manual checks during development included:
 
-Manual checks performed during development: start-up, navigation, screen-reader-visible controls, privacy gating, a real scan of a harmless test drive, a permission-denied folder, secure script preview, finding details, a real Windows Defender custom scan on a harmless folder, updater rollback helper, and settings persistence. A real signed network update was not exercised because no real update URL, certificate, or signing key was provided.
+- Start-up and navigation, scan profiles, category and location presets
+- Privacy gating before scans
+- A real scan of a controlled drive containing Roblox/Lua and Minecraft JAR fixtures
+- Permission-denied folders and archive-limit reporting
+- Pause, resume, and cancel
+- Finding details, read-only Lua preview, and File Explorer warning
+- Read-only process snapshot and publisher signatures
+- A real Windows Defender custom scan on a harmless folder
+- Updater rollback with dummy binaries and settings persistence
 
-## License and attribution
+A complete all-drive scan was not run during validation because it is long-running. A real signed network update was not exercised because no real update URL, publisher certificate, or signing key was provided. Defender detection-record parsing is implemented but was not triggered against live malware during validation.
 
-Made by WERTIX. © 2026 WERTIX. No third-party packages are used beyond the .NET/WPF runtime.
+## Attribution
 
-
-
-
+Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET/WPF runtime.

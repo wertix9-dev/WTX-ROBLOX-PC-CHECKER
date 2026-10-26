@@ -41,7 +41,25 @@
     { "token": "robloxexploit", "product": "Roblox exploit" },
     { "token": "executor", "product": "Executor" }
   ],
-  "robloxProxyDllNames": [
+  "minecraftClientNameTokens": [
+    { "token": "wurst", "product": "Wurst" },
+    { "token": "meteorclient", "product": "Meteor Client" },
+    { "token": "impactclient", "product": "Impact" },
+    { "token": "futureclient", "product": "Future" },
+    { "token": "aristois", "product": "Aristois" },
+    { "token": "bleachhack", "product": "BleachHack" },
+    { "token": "rusherhack", "product": "RusherHack" },
+    { "token": "liquidbounce", "product": "LiquidBounce" },
+    { "token": "salhack", "product": "SalHack" },
+    { "token": "konas", "product": "Konas" },
+    { "token": "lambdaclient", "product": "Lambda" },
+    { "token": "astolfo", "product": "Astolfo" },
+    { "token": "sigmaclient", "product": "Sigma" },
+    { "token": "doomsdayclient", "product": "Doomsday" },
+    { "token": "inertiaclient", "product": "Inertia" },
+    { "token": "wolframclient", "product": "Wolfram" },
+    { "token": "zerionclient", "product": "Zerion" }
+  ],  "robloxProxyDllNames": [
     "version.dll",
     "winmm.dll",
     "dxgi.dll",
@@ -73,4 +91,5 @@
     "fluxus"
   ]
 }
+
 

@@ -40,7 +40,7 @@
                 <StackPanel Margin="0,0,4,0">
                     <TextBlock Text="Before every scan" Style="{StaticResource BodyText}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" Margin="0,0,0,10" />
                     <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,14"
-                               Text="WTX PC CHECK scans the selected drives and files locally for potential Roblox cheat or executor programs and signs of malware, including trojans. It is designed to help support a safer, fairer community. It is a defensive PC-check tool, not a cheat, executor, injector, or malware." />
+                               Text="WTX PC CHECK scans the locations you select for potential Roblox executors, Minecraft cheat clients, and signs of malware, including trojans. It is designed to help support a safer, fairer community. It is a defensive PC-check tool, not a cheat, executor, injector, or malware." />
                     <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,14"
                                Text="WTX PC CHECK does not upload or share your files, file names, paths, file contents, hashes, or scan results. Scanning is performed on this PC. Results remain visible in the app until you close them, then they are discarded. WTX PC CHECK does not keep scan history or collect telemetry, analytics, or crash reports." />
                     <TextBlock Style="{StaticResource BodyText}" Margin="0,0,0,14"
@@ -77,4 +77,5 @@
         </Grid>
     </Border>
 </Window>
+
 

@@ -27,6 +27,7 @@ public sealed class IndicatorFile
     public List<HashIndicator> KnownHashes { get; init; } = [];
     public List<TokenIndicator> ExecutorNameTokens { get; init; } = [];
     public List<TokenIndicator> ExecutorFolderTokens { get; init; } = [];
+    public List<TokenIndicator> MinecraftClientNameTokens { get; init; } = [];
     public List<string> RobloxProxyDllNames { get; init; } = [];
     public List<string> LuaExecutorApiTokens { get; init; } = [];
 }
@@ -42,6 +43,7 @@ public sealed class IndicatorDatabase
     public string Notes { get; private set; } = string.Empty;
     public List<TokenIndicator> ExecutorNameTokens { get; private set; } = [];
     public List<TokenIndicator> ExecutorFolderTokens { get; private set; } = [];
+    public List<TokenIndicator> MinecraftClientNameTokens { get; private set; } = [];
     public bool HasKnownHashes => _hashes.Count > 0;
     public int KnownHashCount => _hashes.Count;
     public string? LoadWarning { get; private set; }
@@ -76,6 +78,7 @@ public sealed class IndicatorDatabase
             db.Notes = data.Notes;
             db.ExecutorNameTokens = data.ExecutorNameTokens.Where(t => !string.IsNullOrWhiteSpace(t.Token)).ToList();
             db.ExecutorFolderTokens = data.ExecutorFolderTokens.Where(t => !string.IsNullOrWhiteSpace(t.Token)).ToList();
+            db.MinecraftClientNameTokens = data.MinecraftClientNameTokens.Where(t => !string.IsNullOrWhiteSpace(t.Token)).ToList();
             db._luaTokens.AddRange(data.LuaExecutorApiTokens.Where(t => !string.IsNullOrWhiteSpace(t)));
             foreach (var proxy in data.RobloxProxyDllNames) db._proxyDlls.Add(proxy);
             foreach (var hash in data.KnownHashes)
@@ -126,6 +129,9 @@ public sealed class IndicatorDatabase
         return matches;
     }
 
+    public bool TryMatchMinecraftToken(string text, out TokenIndicator indicator)
+        => TryMatchToken(text, MinecraftClientNameTokens, out indicator);
+
     public bool IsRobloxProxyDll(string fileName) => _proxyDlls.Contains(fileName);
 
     private static bool TryMatchToken(string value, List<TokenIndicator> tokens, out TokenIndicator indicator)
@@ -144,3 +150,5 @@ public sealed class IndicatorDatabase
         return false;
     }
 }
+
+

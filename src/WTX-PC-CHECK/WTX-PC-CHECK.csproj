@@ -12,10 +12,10 @@
     <StartupObject>WtxPcCheck.Program</StartupObject>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <InformationalVersion>1.1.0</InformationalVersion>
     <AssemblyTitle>WTX PC CHECK</AssemblyTitle>
     <Product>WTX PC CHECK</Product>
     <Company>WERTIX</Company>
@@ -46,5 +46,6 @@
   </ItemGroup>
 
 </Project>
+
 
 

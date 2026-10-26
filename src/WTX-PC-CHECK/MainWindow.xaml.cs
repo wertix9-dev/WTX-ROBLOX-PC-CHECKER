@@ -41,6 +41,7 @@ public partial class MainWindow : Window
         }
 
         UpdateScanAnimation();
+        ResetActiveScrollToTop(immediate: true);
         await _viewModel.HandleStartupAsync();
     }
 
@@ -50,8 +51,11 @@ public partial class MainWindow : Window
         {
             case nameof(MainViewModel.CurrentPageKey):
                 AnimatePage();
+                ResetActiveScrollToTop(immediate: false);
                 break;
             case nameof(MainViewModel.IsScanning):
+            case nameof(MainViewModel.IsPaused):
+            case nameof(MainViewModel.ScanActivityActive):
             case nameof(MainViewModel.EffectiveReduceMotion):
                 UpdateScanAnimation();
                 break;
@@ -92,9 +96,29 @@ public partial class MainWindow : Window
         });
     }
 
+    private void ResetActiveScrollToTop(bool immediate)
+    {
+        var scrollViewer = _viewModel.CurrentPageKey switch
+        {
+            "roblox" or "minecraft" or "full" => ScanScrollViewer,
+            "settings" => SettingsScrollViewer,
+            "about" => AboutScrollViewer,
+            _ => DashboardScrollViewer
+        };
+        if (scrollViewer is null) return;
+        if (immediate)
+        {
+            scrollViewer.ScrollToTop();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(scrollViewer.ScrollToTop));
+        }
+    }
+
     private void UpdateScanAnimation()
     {
-        if (_viewModel.IsScanning && !_viewModel.EffectiveReduceMotion)
+        if (_viewModel.IsScanning && !_viewModel.IsPaused && !_viewModel.EffectiveReduceMotion)
         {
             Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(StartScanAnimation));
         }
@@ -106,7 +130,7 @@ public partial class MainWindow : Window
 
     private void StartScanAnimation()
     {
-        if (_scanAnimationRunning || !_viewModel.IsScanning || _viewModel.EffectiveReduceMotion) return;
+        if (_scanAnimationRunning || !_viewModel.ScanActivityActive || _viewModel.EffectiveReduceMotion) return;
         _scanAnimationRunning = true;
         var track = ScanLine.Parent as FrameworkElement;
         var target = Math.Max(320, track?.ActualWidth ?? 860);
@@ -171,3 +195,4 @@ public partial class MainWindow : Window
         _viewModel.Dispose();
     }
 }
+

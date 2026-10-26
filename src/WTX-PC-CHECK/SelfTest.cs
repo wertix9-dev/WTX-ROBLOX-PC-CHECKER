@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO.Compression;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -129,6 +130,48 @@ public static class SelfTest
             Assert(!string.IsNullOrWhiteSpace(outcome.InaccessibleAreas[0].Reason), "missing root has an English reason");
         });
 
+        Check("Minecraft JAR static analysis", () =>
+        {
+            var root = Path.Combine(Path.GetTempPath(), "wtx-selftest-" + Guid.NewGuid().ToString("N"));
+            var mods = Path.Combine(root, "mods");
+            try
+            {
+                Directory.CreateDirectory(mods);
+                CreateJar(Path.Combine(mods, "Wurst.jar"),
+                    ("fabric.mod.json", "{\"schemaVersion\":1,\"id\":\"wurst\",\"name\":\"Wurst Client\",\"version\":\"1.0.0\"}"),
+                    ("wurst/Client.class", "not a real class"));
+                CreateJar(Path.Combine(mods, "CoolMod.jar"),
+                    ("fabric.mod.json", "{\"schemaVersion\":1,\"id\":\"coolmod\",\"name\":\"Cool Mod\",\"version\":\"2.0.0\"}"),
+                    ("coolmod/Main.class", "not a real class"));
+                CreateJar(Path.Combine(mods, "unknown.jar"),
+                    ("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\r\n"));
+                File.WriteAllText(Path.Combine(mods, "broken.jar"), "this is not a zip archive");
+
+                var engine = new ScanEngine(IndicatorDatabase.LoadEmbedded());
+                var outcome = engine.Scan(new ScanRequest
+                {
+                    Roots = [root],
+                    ScanRobloxExecutables = false,
+                    ScanLuaScripts = false,
+                    ScanMinecraftJars = true,
+                    DetectMinecraftCheatIndicators = true,
+                    ReviewMinecraftJars = true
+                }, null, null, CancellationToken.None);
+
+                Assert(outcome.JarFilesChecked == 4, $"all JARs counted (files={outcome.FilesChecked}, jars={outcome.JarFilesChecked}, archives={outcome.MinecraftArchivesInspected}, issues={outcome.ArchiveIssueTotal}, findings={outcome.Findings.Count})");
+                Assert(outcome.MinecraftArchivesInspected == 3, "three readable archives inspected");
+                Assert(outcome.ArchiveIssueTotal == 1, "broken archive reported");
+                Assert(outcome.MinecraftModsReviewed == 3, "mod review items counted");
+                Assert(outcome.Findings.Any(f => f.Classification == FindingClassification.KnownCheatClient), "known Minecraft client found");
+                Assert(outcome.Findings.Any(f => f.Classification == FindingClassification.LikelyLegitimateMod), "legitimate mod classification found");
+                Assert(outcome.Findings.Any(f => f.Classification == FindingClassification.UnknownFile), "unknown archive classification found");
+                Assert(outcome.Findings.All(f => f.Evidence.Length > 0), "JAR findings carry evidence");
+            }
+            finally
+            {
+                try { Directory.Delete(root, true); } catch { }
+            }
+        });
         Check("Scan cancellation", () =>
         {
             var root = Path.Combine(Path.GetTempPath(), "wtx-selftest-" + Guid.NewGuid().ToString("N"));
@@ -238,6 +281,16 @@ public static class SelfTest
         return _failures == 0 ? 0 : 1;
     }
 
+    private static void CreateJar(string path, params (string Name, string Content)[] entries)
+    {
+        using var archive = ZipFile.Open(path, ZipArchiveMode.Create);
+        foreach (var (name, content) in entries)
+        {
+            var entry = archive.CreateEntry(name);
+            using var writer = new StreamWriter(entry.Open());
+            writer.Write(content);
+        }
+    }
     private static void Check(string name, Action action)
     {
         try
@@ -257,4 +310,7 @@ public static class SelfTest
         if (!condition) throw new InvalidOperationException(message);
     }
 }
+
+
+
 

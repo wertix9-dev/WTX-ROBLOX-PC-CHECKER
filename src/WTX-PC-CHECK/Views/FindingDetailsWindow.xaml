@@ -54,10 +54,16 @@
                         <Border Style="{StaticResource Badge}" Background="{Binding Risk, Converter={StaticResource RiskToBrush}, ConverterParameter=soft}" BorderBrush="{Binding Risk, Converter={StaticResource RiskToBrush}}" BorderThickness="1" Margin="0,0,8,0">
                             <TextBlock Text="{Binding RiskLabel}" Foreground="{Binding Risk, Converter={StaticResource RiskToBrush}}" FontWeight="SemiBold" FontSize="11" />
                         </Border>
-                        <Border Style="{StaticResource Badge}" Background="#172126" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="0,0,8,0">
+                        <Border Style="{StaticResource Badge}" Background="#142A2D" BorderBrush="#275854" BorderThickness="1" Margin="0,0,8,4">
+                            <TextBlock Text="{Binding ClassificationLabel}" Foreground="{StaticResource AccentBrush}" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+                        <Border Style="{StaticResource Badge}" Background="#172126" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="0,0,8,4">
+                            <TextBlock Text="{Binding ConfidenceLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" />
+                        </Border>
+                        <Border Style="{StaticResource Badge}" Background="#172126" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="0,0,8,4">
                             <TextBlock Text="{Binding CategoryLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" />
                         </Border>
-                        <Border Style="{StaticResource Badge}" Background="#172126" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1">
+                        <Border Style="{StaticResource Badge}" Background="#172126" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" Margin="0,0,0,4">
                             <TextBlock Text="{Binding FileType}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" />
                         </Border>
                     </WrapPanel>
@@ -80,6 +86,9 @@
                     <Border Style="{StaticResource Divider}" />
                     <TextBlock Text="Why it was flagged" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
                     <TextBlock Text="{Binding Explanation}" Style="{StaticResource BodyText}" Margin="0,0,0,14" />
+
+                    <TextBlock Text="Evidence" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
+                    <TextBlock Text="{Binding Evidence}" Style="{StaticResource BodyText}" Margin="0,0,0,14" />
 
                     <TextBlock Text="Detection method" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
                     <TextBlock Text="{Binding DetectionMethod}" Style="{StaticResource BodyText}" Margin="0,0,0,14" />
@@ -132,5 +141,6 @@
         </Grid>
     </Border>
 </Window>
+
 
 

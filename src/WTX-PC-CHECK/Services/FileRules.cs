@@ -20,7 +20,8 @@ public static partial class FileRules
         [".sys"] = "System driver (.sys)",
         [".ocx"] = "ActiveX control (.ocx)",
         [".lua"] = "Lua script (.lua)",
-        [".luau"] = "Luau script (.luau)"
+        [".luau"] = "Luau script (.luau)",
+        [".jar"] = "Minecraft archive (.jar)"
     };
 
     public static bool IsPeFile(string path) => PeExtensions.Contains(Path.GetExtension(path));
@@ -32,7 +33,10 @@ public static partial class FileRules
             || extension.Equals(".luau", StringComparison.OrdinalIgnoreCase);
     }
 
-    public static bool IsCandidateFile(string path) => IsPeFile(path) || IsLuaFile(path);
+    public static bool IsJarFile(string path)
+        => Path.GetExtension(path).Equals(".jar", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsCandidateFile(string path) => IsPeFile(path) || IsLuaFile(path) || IsJarFile(path);
 
     public static string FileTypeLabel(string path)
     {
@@ -50,6 +54,20 @@ public static partial class FileRules
         => attributes.HasFlag(FileAttributes.Offline)
            || ((int)attributes & 0x40000) != 0
            || ((int)attributes & 0x400000) != 0;
+
+    public static bool IsMinecraftModsPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        var lower = path.ToLowerInvariant();
+        return lower.Contains(@"\mods\") ||
+               lower.Contains(@"\.minecraft\") ||
+               lower.Contains(@"\instances\") ||
+               lower.Contains(@"\curseforge\") ||
+               lower.Contains(@"\modrinth\") ||
+               lower.Contains(@"\prismlauncher\") ||
+               lower.Contains(@"\multimc\") ||
+               lower.Contains(@"\techniclauncher\");
+    }
 
     public static bool IsInRobloxVersionsFolder(string path)
         => path.Contains(@"\Roblox\Versions\", StringComparison.OrdinalIgnoreCase);
@@ -88,4 +106,6 @@ public static partial class FileRules
     [GeneratedRegex("[^a-z0-9]+", RegexOptions.CultureInvariant)]
     private static partial Regex NonAlphaNumeric();
 }
+
+
 

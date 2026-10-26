@@ -106,6 +106,26 @@ public sealed class StartupEntry
     };
 }
 
+public sealed class RunningProcessInfo
+{
+    public required string Name { get; init; }
+    public int ProcessId { get; init; }
+    public string? ExecutablePath { get; init; }
+    public SignatureInfo Signature { get; init; } = new();
+    public RiskLevel Risk { get; init; }
+    public string Explanation { get; init; } = string.Empty;
+
+    public string PublisherDisplay => Signature.Subject ?? "Publisher unavailable";
+    public string PathDisplay => ExecutablePath ?? "Path unavailable (protected process or access denied)";
+    public string RiskLabel => Risk switch
+    {
+        RiskLevel.High => "High attention",
+        RiskLevel.Medium => "Review",
+        RiskLevel.Low => "Low",
+        _ => "Info"
+    };
+}
+
 public sealed class SecurityOverview
 {
     public SecurityQueryState State { get; set; } = SecurityQueryState.NotChecked;
@@ -116,6 +136,10 @@ public sealed class SecurityOverview
     public int StartupEntryCount { get; set; }
     public bool StartupListTruncated { get; set; }
     public string StartupNote { get; set; } = string.Empty;
+    public List<RunningProcessInfo> Processes { get; set; } = [];
+    public int ProcessCount { get; set; }
+    public bool ProcessListTruncated { get; set; }
+    public string ProcessNote { get; set; } = string.Empty;
     public List<string> RegisteredAntivirus { get; set; } = [];
     public DateTimeOffset? CheckedUtc { get; set; }
     public string WindowsDisplay { get; set; } = "Windows";
