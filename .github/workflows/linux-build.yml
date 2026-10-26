@@ -52,6 +52,8 @@ jobs:
           cp packaging/linux/wtx-pc-check.desktop "$APP_DIR/usr/share/applications/wtx-pc-check.desktop"
           cp packaging/linux/wtx-pc-check.png "$APP_DIR/wtx-pc-check.png"
           cp packaging/linux/wtx-pc-check.png "$APP_DIR/usr/share/icons/hicolor/256x256/apps/wtx-pc-check.png"
+          sed -i '1s/^\xEF\xBB\xBF//' "$APP_DIR/AppRun" "$APP_DIR/wtx-pc-check.desktop"
+          sed -i 's/\r$//' "$APP_DIR/AppRun" "$APP_DIR/wtx-pc-check.desktop"
           chmod +x "$APP_DIR/AppRun" "$APP_DIR/usr/bin/WTX-PC-CHECK"
 
           # Portable tar.gz
@@ -118,4 +120,5 @@ jobs:
             publish/linux/wtx-pc-check_1.2.0_amd64.deb
             publish/linux/linux-selftest.txt
           if-no-files-found: error
+
 
