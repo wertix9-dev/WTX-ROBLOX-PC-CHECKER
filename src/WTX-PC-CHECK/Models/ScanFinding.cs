@@ -5,6 +5,7 @@ public enum FindingClassification
     KnownCheatClient,
     PotentiallySuspicious,
     MalwareDetectedByWindowsSecurity,
+    MalwareDetectedByLocalScanner,
     UnknownFile,
     LikelyLegitimateMod
 }
@@ -76,6 +77,7 @@ public sealed class ScanFinding
         FindingClassification.KnownCheatClient => "Known Cheat Client",
         FindingClassification.PotentiallySuspicious => "Potentially Suspicious",
         FindingClassification.MalwareDetectedByWindowsSecurity => "Malware Detected by Windows Security",
+        FindingClassification.MalwareDetectedByLocalScanner => "Malware Detected by Local Scanner",
         FindingClassification.UnknownFile => "Unknown File",
         FindingClassification.LikelyLegitimateMod => "Likely Legitimate Mod",
         _ => "Unknown File"
@@ -101,5 +103,6 @@ public sealed class ScanFinding
         _ => "3"
     };
 }
+
 
 

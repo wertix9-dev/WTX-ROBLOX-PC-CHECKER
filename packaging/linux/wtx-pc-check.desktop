@@ -1,0 +1,11 @@
+﻿[Desktop Entry]
+Type=Application
+Name=WTX PC CHECK
+GenericName=Defensive PC check
+Comment=Local defensive check for Roblox executor indicators, Minecraft cheat indicators, and Linux security status.
+Exec=wtx-pc-check
+Icon=wtx-pc-check
+Terminal=false
+Categories=Utility;Security;
+Keywords=security;scanner;roblox;minecraft;clamav;
+StartupNotify=true

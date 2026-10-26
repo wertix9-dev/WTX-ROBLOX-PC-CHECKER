@@ -1,0 +1,22 @@
+﻿<Window x:Class="WtxPcCheck.Linux.Views.MessageDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WTX PC CHECK" Width="560" SizeToContent="Height" MaxHeight="620"
+        WindowStartupLocation="CenterOwner" CanResize="False"
+        Background="#0F1418" Foreground="#EDF5F7">
+  <Border Background="#131A1F" BorderBrush="#2A3742" BorderThickness="1" CornerRadius="10" Margin="12">
+    <StackPanel Margin="24" Spacing="14">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock x:Name="IconText" Text="!" FontSize="25" Foreground="#2FD4C4" />
+        <TextBlock x:Name="TitleText" Text="WTX PC CHECK" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+      </StackPanel>
+      <ScrollViewer MaxHeight="420">
+        <TextBlock x:Name="MessageText" Classes="muted" TextWrapping="Wrap" />
+      </ScrollViewer>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Button x:Name="SecondaryButton" Content="Cancel" Classes="secondary" Click="Secondary_Click" />
+        <Button x:Name="PrimaryButton" Content="OK" Classes="primary" Click="Primary_Click" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>

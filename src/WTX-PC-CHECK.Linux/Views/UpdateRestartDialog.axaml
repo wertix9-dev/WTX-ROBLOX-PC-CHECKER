@@ -1,0 +1,27 @@
+﻿<Window x:Class="WtxPcCheck.Linux.Views.UpdateRestartDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WTX PC CHECK update" Width="620" SizeToContent="Height" MaxHeight="640"
+        WindowStartupLocation="CenterOwner" CanResize="False"
+        Background="#0F1418" Foreground="#EDF5F7">
+  <Border Background="#131A1F" BorderBrush="#2A3742" BorderThickness="1" CornerRadius="10" Margin="12">
+    <StackPanel Margin="24" Spacing="12">
+      <TextBlock Text="Update verified and ready" FontSize="20" FontWeight="SemiBold" />
+      <TextBlock x:Name="VersionText" Classes="small" />
+      <TextBlock Classes="muted" TextWrapping="Wrap" Text="WTX PC CHECK needs to restart to replace the app file. The update was downloaded over HTTPS, its SHA-256 hash was checked, and its OpenPGP publisher signature was verified against the configured fingerprint. If installation fails, the helper restores the previous AppImage." />
+      <TextBlock Classes="small" TextWrapping="Wrap" Text="Only a user-owned AppImage is updated. Package-managed and archive installations are never silently replaced. No scan data is sent to the update server." />
+      <Border Classes="card" Padding="12" Background="#121A1F">
+        <StackPanel Spacing="5">
+          <TextBlock Text="Release notes" Classes="small" />
+          <ScrollViewer MaxHeight="150">
+            <TextBlock x:Name="NotesText" Classes="small" TextWrapping="Wrap" />
+          </ScrollViewer>
+        </StackPanel>
+      </Border>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Button Content="Not now" Classes="secondary" Click="Later_Click" />
+        <Button Content="Restart and update" Classes="primary" Click="Restart_Click" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>

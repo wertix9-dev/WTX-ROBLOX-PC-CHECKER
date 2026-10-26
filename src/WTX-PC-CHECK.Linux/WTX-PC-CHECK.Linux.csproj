@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>WtxPcCheck.Linux</RootNamespace>
+    <AssemblyName>WTX-PC-CHECK</AssemblyName>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0</InformationalVersion>
+    <AssemblyTitle>WTX PC CHECK</AssemblyTitle>
+    <Product>WTX PC CHECK</Product>
+    <Company>WERTIX</Company>
+    <Authors>WERTIX</Authors>
+    <Description>Defensive local PC check for Linux, Windows 10, and Windows 11.</Description>
+    <Copyright>Copyright (c) 2026 WERTIX</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+    <EmbeddedResource Include="..\WTX-PC-CHECK\Data\KnownIndicators.json" Link="Data\KnownIndicators.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\WTX-PC-CHECK\AppInfo.cs" Link="Shared\AppInfo.cs" />
+    <Compile Include="..\WTX-PC-CHECK\AppFormat.cs" Link="Shared\AppFormat.cs" />
+    <Compile Include="..\WTX-PC-CHECK\ObservableObject.cs" Link="Shared\ObservableObject.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Models\AppSettings.cs" Link="Shared\Models\AppSettings.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Models\ScanFinding.cs" Link="Shared\Models\ScanFinding.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Models\ScanModels.cs" Link="Shared\Models\ScanModels.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Models\SignatureInfo.cs" Link="Shared\Models\SignatureInfo.cs" />
+    <Compile Include="..\WTX-PC-CHECK\ViewModels\ScanConfiguration.cs" Link="Shared\ViewModels\ScanConfiguration.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\FileRules.cs" Link="Shared\Services\FileRules.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\HashService.cs" Link="Shared\Services\HashService.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\IndicatorDatabase.cs" Link="Shared\Services\IndicatorDatabase.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\ScanEngine.cs" Link="Shared\Services\ScanEngine.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\MinecraftJarAnalyzer.cs" Link="Shared\Services\MinecraftJarAnalyzer.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\ScanPauseController.cs" Link="Shared\Services\ScanPauseController.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\ScriptPreviewService.cs" Link="Shared\Services\ScriptPreviewService.cs" />
+    <Compile Include="..\WTX-PC-CHECK\Services\VersionUtil.cs" Link="Shared\Services\VersionUtil.cs" />
+  </ItemGroup>
+</Project>
+

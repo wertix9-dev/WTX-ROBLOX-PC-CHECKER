@@ -1,0 +1,121 @@
+﻿name: Linux packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore and publish Linux application
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet publish src/WTX-PC-CHECK.Linux/WTX-PC-CHECK.Linux.csproj \
+            -c Release -r linux-x64 --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:EnableCompressionInSingleFile=true \
+            -p:DebugType=none -p:DebugSymbols=false \
+            -o publish/linux/app
+          chmod +x publish/linux/app/WTX-PC-CHECK
+
+      - name: Self-test Linux scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./publish/linux/app/WTX-PC-CHECK --self-test "$PWD/publish/linux/linux-selftest.txt"
+          cat publish/linux/linux-selftest.txt
+
+      - name: Build AppDir, AppImage, tar.gz, and .deb
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="1.2.0"
+          APP_DIR="publish/linux/WTX-PC-CHECK.AppDir"
+          mkdir -p "$APP_DIR/usr/bin" "$APP_DIR/usr/share/applications" "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
+          cp publish/linux/app/WTX-PC-CHECK "$APP_DIR/usr/bin/WTX-PC-CHECK"
+          ln -sf WTX-PC-CHECK "$APP_DIR/usr/bin/wtx-pc-check"
+          cp packaging/linux/AppRun "$APP_DIR/AppRun"
+          cp packaging/linux/wtx-pc-check.desktop "$APP_DIR/wtx-pc-check.desktop"
+          cp packaging/linux/wtx-pc-check.desktop "$APP_DIR/usr/share/applications/wtx-pc-check.desktop"
+          cp packaging/linux/wtx-pc-check.png "$APP_DIR/wtx-pc-check.png"
+          cp packaging/linux/wtx-pc-check.png "$APP_DIR/usr/share/icons/hicolor/256x256/apps/wtx-pc-check.png"
+          chmod +x "$APP_DIR/AppRun" "$APP_DIR/usr/bin/WTX-PC-CHECK"
+
+          # Portable tar.gz
+          TAR_ROOT="publish/linux/WTX-PC-CHECK-${VERSION}-linux-x64"
+          rm -rf "$TAR_ROOT"; mkdir -p "$TAR_ROOT"
+          cp publish/linux/app/WTX-PC-CHECK "$TAR_ROOT/WTX-PC-CHECK"
+          ln -sf WTX-PC-CHECK "$TAR_ROOT/wtx-pc-check"
+          cp packaging/linux/wtx-pc-check.desktop "$TAR_ROOT/"
+          cp packaging/linux/wtx-pc-check.png "$TAR_ROOT/"
+          cp packaging/linux/AppRun "$TAR_ROOT/AppRun"
+          cat > "$TAR_ROOT/README-Linux.txt" <<'EOF'
+          WTX PC CHECK 1.2.0 - Linux x64 portable archive
+          Made by WERTIX
+
+          Run:
+            ./WTX-PC-CHECK
+
+          The file is self-contained. Keep it executable. No root access is required.
+          AppImage is recommended for Bazzite. The .deb is for Kali and compatible Debian systems.
+          No scan history is stored. Results are discarded when closed or when the app exits.
+          Update URL and OpenPGP publisher key are not configured in this build.
+          EOF
+          chmod +x "$TAR_ROOT/WTX-PC-CHECK" "$TAR_ROOT/AppRun"
+          tar -czf "publish/linux/WTX-PC-CHECK-${VERSION}-linux-x64.tar.gz" -C publish/linux "WTX-PC-CHECK-${VERSION}-linux-x64"
+
+          # AppImage
+          curl -L --fail --retry 3 -o /tmp/appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x /tmp/appimagetool
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 /tmp/appimagetool "$APP_DIR" "publish/linux/WTX-PC-CHECK-${VERSION}-x86_64.AppImage"
+          chmod +x "publish/linux/WTX-PC-CHECK-${VERSION}-x86_64.AppImage"
+
+          # Debian package
+          DEB_ROOT="publish/linux/deb-root"
+          rm -rf "$DEB_ROOT"
+          mkdir -p "$DEB_ROOT/DEBIAN" "$DEB_ROOT/opt/wtx-pc-check" "$DEB_ROOT/usr/bin" "$DEB_ROOT/usr/share/applications" "$DEB_ROOT/usr/share/icons/hicolor/256x256/apps"
+          cp publish/linux/app/WTX-PC-CHECK "$DEB_ROOT/opt/wtx-pc-check/WTX-PC-CHECK"
+          chmod 755 "$DEB_ROOT/opt/wtx-pc-check/WTX-PC-CHECK"
+          ln -sf /opt/wtx-pc-check/WTX-PC-CHECK "$DEB_ROOT/usr/bin/wtx-pc-check"
+          cp packaging/linux/wtx-pc-check.desktop "$DEB_ROOT/usr/share/applications/wtx-pc-check.desktop"
+          cp packaging/linux/wtx-pc-check.png "$DEB_ROOT/usr/share/icons/hicolor/256x256/apps/wtx-pc-check.png"
+          cat > "$DEB_ROOT/DEBIAN/control" <<'EOF'
+          Package: wtx-pc-check
+          Version: 1.2.0
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: WERTIX
+          Depends: libc6, libx11-6, libice6, libsm6, libfontconfig1, libfreetype6, libharfbuzz0b, libxcb1, libxkbcommon0, libxrandr2, libxi6, libgl1
+          Description: WTX PC CHECK defensive local PC checker
+           Local Roblox executor, Minecraft cheat-client, Lua, JAR, and Linux security checks.
+           Scans are read-only and results are never uploaded. No root access is required.
+          EOF
+          dpkg-deb --build --root-owner-group "$DEB_ROOT" "publish/linux/wtx-pc-check_${VERSION}_amd64.deb"
+
+          ls -lh publish/linux/*.AppImage publish/linux/*.tar.gz publish/linux/*.deb
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: wtx-pc-check-linux-packages
+          path: |
+            publish/linux/WTX-PC-CHECK-1.2.0-x86_64.AppImage
+            publish/linux/WTX-PC-CHECK-1.2.0-linux-x64.tar.gz
+            publish/linux/wtx-pc-check_1.2.0_amd64.deb
+            publish/linux/linux-selftest.txt
+          if-no-files-found: error
+

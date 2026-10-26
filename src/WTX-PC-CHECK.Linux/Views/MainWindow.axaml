@@ -1,0 +1,685 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="using:Avalonia.Data.Converters"
+        x:Class="WtxPcCheck.Linux.Views.MainWindow"
+        Title="WTX PC CHECK" Width="1200" Height="820" MinWidth="980" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Icon="avares://WTX-PC-CHECK/Assets/AppIcon.ico"
+        Background="#0F1418" Foreground="#EDF5F7">
+  <Grid RowDefinitions="58,*">
+    <Border Grid.Row="0" Background="#11181D" BorderBrush="#222E37" BorderThickness="0,0,0,1" Padding="18,0,10,0">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+          <Border Width="30" Height="30" CornerRadius="7" Background="#16282C" BorderBrush="#275854" BorderThickness="1">
+            <TextBlock Text="✓" FontSize="17" Foreground="#2FD4C4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="WTX PC CHECK" FontSize="14" FontWeight="SemiBold" />
+            <TextBlock Text="Made by WERTIX" Classes="small" />
+          </StackPanel>
+        </StackPanel>
+        <Border Grid.Column="1" Background="#142326" BorderBrush="#244641" BorderThickness="1" CornerRadius="6" Padding="10,4" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="Linux local scan" FontSize="11" Foreground="#A8B8BF" />
+        </Border>
+        <TextBlock Grid.Column="2" Text="{Binding PlatformText}" Classes="small" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="210,*">
+      <Border Grid.Column="0" Background="#11181D" BorderBrush="#222E37" BorderThickness="0,0,1,0" Padding="14,20,14,14">
+        <Grid RowDefinitions="Auto,*,Auto">
+          <StackPanel Grid.Row="0" Spacing="8" Margin="6,0,6,16">
+            <TextBlock Text="WORKSPACE" Classes="small" Foreground="#7F9199" />
+            <ListBox Classes="nav" ItemsSource="{Binding NavigationItems}" SelectedItem="{Binding SelectedNav, Mode=TwoWay}" Background="Transparent" BorderThickness="0">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="22,*">
+                    <TextBlock Text="{Binding Glyph}" Foreground="#2FD4C4" FontSize="14" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Label}" FontSize="12.5" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+          <StackPanel Grid.Row="2" Spacing="5">
+            <Border Height="1" Background="#222E37" Margin="0,0,0,10" />
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <TextBlock Text="✓" Foreground="#2FD4C4" />
+              <TextBlock Text="WTX PC CHECK" FontWeight="SemiBold" FontSize="12" />
+            </StackPanel>
+            <TextBlock Text="Made by WERTIX" Classes="small" />
+            <TextBlock Text="{Binding VersionText}" Classes="small" />
+            <TextBlock Text="No telemetry | No scan history" Classes="small" FontSize="10" />
+            <TextBlock Text="Linux · X11 / Wayland" Classes="small" FontSize="10" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Column="1" RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Background="#221F15" BorderBrush="#4A3C1F" BorderThickness="1" CornerRadius="7" Margin="26,12,26,0" Padding="12,9" IsVisible="{Binding HasNotice}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding NoticeText}" Classes="small" Foreground="#E7D6B4" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Content="Dismiss" Classes="ghost" Command="{Binding DismissNoticeCommand}" />
+          </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <Grid>
+          <!-- DASHBOARD -->
+          <StackPanel Margin="26,22,26,30" Spacing="14" IsVisible="{Binding IsDashboardPage}">
+            <StackPanel Spacing="4">
+              <TextBlock Text="Dashboard" Classes="h1" />
+              <TextBlock Text="{Binding CurrentPageSubtitle}" Classes="muted" />
+            </StackPanel>
+
+            <Border Classes="card" Background="#17242A" BorderBrush="#2B4148" Padding="26">
+              <Grid ColumnDefinitions="*,210">
+                <StackPanel Spacing="8" Margin="0,0,20,0">
+                  <TextBlock Text="WERTIX · LOCAL PC CHECK" Classes="small" Foreground="#2FD4C4" />
+                  <TextBlock Text="A clearer look at this Linux PC" FontSize="27" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="Review selected Linux locations for Roblox executor indicators, Minecraft cheat signals, and basic security gaps. Every check is local and every result is explained with its limits." />
+                  <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                    <Button Content="Start Full PC Scan" Classes="primary" Command="{Binding StartFullScanSetupCommand}" />
+                    <Button Content="Open scan" Classes="secondary" Command="{Binding NavigateScanCommand}" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding SelectedScopeSummary}" Classes="small" Margin="0,4,0,0" />
+                  <TextBlock Text="A privacy confirmation appears before every scan." Classes="small" />
+                </StackPanel>
+                <Grid Grid.Column="1" Width="180" Height="180" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Ellipse Width="168" Height="168" Stroke="#2B4650" StrokeThickness="1" />
+                  <Ellipse Width="136" Height="136" Stroke="#2F6B66" StrokeThickness="1" StrokeDashArray="4,6" />
+                  <TextBlock Text="WTX" FontSize="42" FontWeight="SemiBold" Foreground="#2FD4C4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Text="LOCAL" Classes="small" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,12" />
+                </Grid>
+              </Grid>
+            </Border>
+
+            <Grid ColumnDefinitions="1.5*,14,1*">
+              <StackPanel Grid.Column="0" Spacing="14">
+                <Border Classes="card">
+                  <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="PC status" Classes="h2" />
+                      <Border Background="#182A2E" BorderBrush="#275854" BorderThickness="1" CornerRadius="6" Padding="8,3">
+                        <TextBlock Text="{Binding ScanStatusLabel}" FontSize="10" Foreground="#2FD4C4" />
+                      </Border>
+                    </Grid>
+                    <TextBlock Text="{Binding PcStatusLabel}" FontSize="23" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding PcStatusDetail}" Classes="muted" />
+                    <TextBlock Text="{Binding SelectedRootsDisplay}" Classes="small" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                      <Button Content="Open scan" Classes="secondary" Command="{Binding NavigateScanCommand}" />
+                      <Button Content="Close results" Classes="ghost" Command="{Binding CloseResultsCommand}" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
+                <Border Classes="card" IsVisible="{Binding HasScanOutcome}">
+                  <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="Results in this session" Classes="h2" />
+                      <TextBlock Text="{Binding LastScanText}" Classes="small" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*,*,*">
+                      <StackPanel><TextBlock Text="{Binding FilesCheckedText}" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="FILES CHECKED" Classes="small"/></StackPanel>
+                      <StackPanel Grid.Column="1"><TextBlock Text="{Binding HighCountText}" FontSize="20" FontWeight="SemiBold" Foreground="#F06A6A"/><TextBlock Text="HIGH" Classes="small"/></StackPanel>
+                      <StackPanel Grid.Column="2"><TextBlock Text="{Binding MediumCountText}" FontSize="20" FontWeight="SemiBold" Foreground="#E8B04B"/><TextBlock Text="MEDIUM" Classes="small"/></StackPanel>
+                      <StackPanel Grid.Column="3"><TextBlock Text="{Binding InaccessibleCountText}" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="INACCESSIBLE" Classes="small"/></StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding ScanSummaryText}" Classes="small" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                  <Expander Header="What gets scanned?">
+                    <StackPanel Spacing="6">
+                      <TextBlock Classes="muted" TextWrapping="Wrap" Text="WTX PC CHECK inspects only selected Linux locations, including hidden files where permissions allow. Roblox and .lua files are reviewed separately from Minecraft .jar/mod archives. Files are never executed, JARs are never extracted to disk, and process memory is never inspected." />
+                      <TextBlock Classes="muted" Text="- Roblox executable/library indicators, locations, names, and static Lua text." />
+                      <TextBlock Classes="muted" Text="- Minecraft JAR metadata, entry names, mod metadata, and known cheat-client indicators." />
+                      <TextBlock Classes="muted" Text="- Linux firewall, update status, XDG/systemd startup entries, and running process metadata." />
+                      <TextBlock Classes="small" Text="Unselected locations, protected files, cloud placeholders, oversized or unreadable archives, and sandbox-restricted paths may not be checked. Detection is not perfect." />
+                    </StackPanel>
+                  </Expander>
+                </Border>
+              </StackPanel>
+
+              <StackPanel Grid.Column="2" Spacing="14">
+                <Border Classes="card">
+                  <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="Updates" Classes="h2" />
+                      <TextBlock Text="{Binding UpdateStateLabel}" Classes="small" Foreground="#E8B04B" />
+                    </Grid>
+                    <TextBlock Text="{Binding UpdateMessage}" Classes="muted" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding UpdateVersionText}" Classes="small" Foreground="#2FD4C4" />
+                    <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Maximum="100" IsVisible="{Binding UpdateProgressVisible}" />
+                    <TextBlock Text="{Binding UpdateProgressText}" Classes="small" />
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                      <Button Content="Check now" Classes="secondary" Command="{Binding CheckUpdatesCommand}" />
+                      <Button Content="Restart and install" Classes="primary" Command="{Binding InstallUpdateCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding InstallKindText}" Classes="small" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                  <StackPanel Spacing="7">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="Linux security" Classes="h2" />
+                      <TextBlock Text="{Binding SecurityCheckedText}" Classes="small" />
+                    </Grid>
+                    <TextBlock Text="{Binding DistributionText}" Classes="small" />
+                    <TextBlock Text="Firewall" Classes="small" />
+                    <TextBlock Text="{Binding FirewallStatusText}" />
+                    <TextBlock Text="{Binding UpdateStatusText}" Classes="small" />
+                    <TextBlock Text="{Binding ProcessSummaryText}" Classes="small" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding WindowsEquivalentText}" Classes="small" TextWrapping="Wrap" />
+                    <Button Content="Open security details" Classes="ghost" Command="{Binding NavigateScanCommand}" HorizontalAlignment="Left" />
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </Grid>
+
+            <TextBlock Text="WTX PC CHECK · Made by WERTIX · Scans stay on this PC · Results are discarded when closed." Classes="small" HorizontalAlignment="Center" TextAlignment="Center" />
+          </StackPanel>
+
+
+          <!-- SCAN WORKSPACE -->
+          <StackPanel Margin="26,22,26,30" Spacing="14" IsVisible="{Binding IsScanPage}">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="3">
+                <TextBlock Text="{Binding CurrentPageTitle}" Classes="h1" />
+                <TextBlock Text="{Binding CurrentPageSubtitle}" Classes="muted" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding PlatformText}" Classes="small" VerticalAlignment="Top" />
+            </Grid>
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="Scan profile" Classes="h2" />
+                    <TextBlock Text="Selecting a profile sets its categories and locations. Review them before starting." Classes="small" />
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Add custom folder" Classes="ghost" Command="{Binding AddCustomFolderCommand}" />
+                </Grid>
+                <ListBox Classes="chips" ItemsSource="{Binding ProfileOptions}" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" Background="Transparent" BorderThickness="0" IsEnabled="{Binding IsBusy, Converter={x:Static conv:BoolConverters.Not}}">
+                  <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                  </ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Label}" FontSize="11.5" /></DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+                <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="8" Padding="12">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="THIS PROFILE CHECKS" Classes="small" />
+                    <TextBlock Text="{Binding ProfileChecksSummary}" Classes="muted" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Scan categories" Classes="h2" />
+                <CheckBox IsChecked="{Binding ScanRobloxExecutables, Mode=TwoWay}" Content="Roblox executor programs and related components" FontWeight="SemiBold" />
+                <TextBlock Text="Inspect executable files and shared libraries for explainable name, folder, signature availability, proxy-DLL, and local hash indicators. Linux publisher signatures are not verified." Classes="small" Margin="28,0,0,8" />
+                <CheckBox IsChecked="{Binding ScanLuaScripts, Mode=TwoWay}" Content="Lua and Luau script review" FontWeight="SemiBold" />
+                <TextBlock Text="Static text review up to 256 KB per file. Scripts are never executed." Classes="small" Margin="28,0,0,8" />
+                <CheckBox IsChecked="{Binding ScanMinecraftJars, Mode=TwoWay}" Content="Minecraft JAR files and mod folders" FontWeight="SemiBold" />
+                <TextBlock Text="Static ZIP/JAR metadata and entry-name inspection without extraction or execution. Archives have size and entry limits." Classes="small" Margin="28,0,0,8" />
+                <CheckBox IsChecked="{Binding DetectMinecraftCheatIndicators, Mode=TwoWay}" Content="Known Minecraft cheat-client indicators" FontWeight="SemiBold" />
+                <TextBlock Text="Match known names and metadata locally. Unknown mods are not labelled malicious." Classes="small" Margin="28,0,0,8" />
+                <CheckBox IsChecked="{Binding IncludeLinuxSecurity, Mode=TwoWay}" Content="Linux security, startup entries, and running processes" FontWeight="SemiBold" />
+                <TextBlock Text="Read-only firewall/update status, XDG/systemd startup entries, and /proc process metadata. Process memory is never inspected." Classes="small" Margin="28,0,0,0" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="Scan locations" Classes="h2" />
+                    <TextBlock Text="{Binding SelectedScopeSummary}" Classes="small" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7">
+                    <Button Content="Select mounts" Classes="ghost" Command="{Binding SelectMountsCommand}" />
+                    <Button Content="Clear" Classes="ghost" Command="{Binding ClearLocationsCommand}" />
+                  </StackPanel>
+                </Grid>
+
+                <Expander Header="Mounted filesystems" IsExpanded="True">
+                  <ItemsControl ItemsSource="{Binding Mounts}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="7" Padding="10,7" Margin="0,0,0,5">
+                          <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding $parent[Window].DataContext.IsBusy, Converter={x:Static conv:BoolConverters.Not}}" Content="{Binding Label}" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Expander>
+
+                <Expander Header="Detected game folders" IsExpanded="True">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Only checked paths are scanned. Linux launchers can use different layouts; add folders manually if yours is missing." Classes="small" />
+                    <ItemsControl ItemsSource="{Binding GameFolders}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="7" Padding="10,7" Margin="0,0,0,5">
+                            <StackPanel Spacing="2">
+                              <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding $parent[Window].DataContext.IsBusy, Converter={x:Static conv:BoolConverters.Not}}">
+                                <StackPanel Spacing="1">
+                                  <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="12" />
+                                  <TextBlock Text="{Binding Path}" Classes="small" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                              </CheckBox>
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No common game folders detected. Use Add custom folder." Classes="small" IsVisible="{Binding !HasGameFolders}" />
+                  </StackPanel>
+                </Expander>
+
+                <Expander Header="Common user folders">
+                  <ItemsControl ItemsSource="{Binding CommonFolders}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="7" Padding="10,7" Margin="0,0,0,5">
+                          <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Content="{Binding Label}" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Expander>
+
+                <Expander Header="Custom folders">
+                  <StackPanel Spacing="5">
+                    <ItemsControl ItemsSource="{Binding CustomFolders}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="7" Padding="10,7" Margin="0,0,0,5">
+                            <Grid ColumnDefinitions="*,Auto">
+                              <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                <StackPanel>
+                                  <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="SemiBold" />
+                                  <TextBlock Text="{Binding Path}" Classes="small" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                              </CheckBox>
+                              <Button Grid.Column="1" Content="Remove" Classes="ghost" Click="RemoveCustomFolder_Click" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="Add custom folder..." Classes="secondary" HorizontalAlignment="Left" Command="{Binding AddCustomFolderCommand}" />
+                  </StackPanel>
+                </Expander>
+
+                <TextBlock Text="{Binding SelectedRootsDisplay}" Classes="small" TextWrapping="Wrap" />
+                <TextBlock Text="A privacy confirmation appears before every scan. ClamAV is separate and optional." Classes="small" />
+              </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Start Scan" Classes="primary" Command="{Binding StartScanCommand}" />
+              <Button Content="Pause" Classes="secondary" Command="{Binding PauseScanCommand}" IsVisible="{Binding ScanActivityActive}" />
+              <Button Content="Resume" Classes="primary" Command="{Binding ResumeScanCommand}" IsVisible="{Binding IsPaused}" />
+              <Button Content="Cancel" Classes="ghost" Command="{Binding CancelScanCommand}" IsVisible="{Binding IsScanning}" />
+              <Button Content="Run ClamAV scan" Classes="secondary" Command="{Binding RunClamAvCommand}" IsVisible="{Binding ClamAvAvailable}" />
+              <Button Content="Cancel ClamAV" Classes="ghost" Command="{Binding CancelClamAvCommand}" IsVisible="{Binding IsClamScanning}" />
+            </StackPanel>
+
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Border Background="#182A2E" BorderBrush="#275854" BorderThickness="1" CornerRadius="6" Padding="8,3">
+                      <TextBlock Text="{Binding ScanStatusLabel}" FontSize="10" Foreground="#2FD4C4" />
+                    </Border>
+                    <TextBlock Text="{Binding PcStatusDetail}" Classes="muted" TextWrapping="Wrap" MaxWidth="760" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Elapsed" Classes="small" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding ScanElapsedText}" />
+                  </StackPanel>
+                </Grid>
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
+                <Grid ColumnDefinitions="*,*,*,*">
+                  <StackPanel><TextBlock Text="{Binding FilesCheckedText}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="FILES CHECKED" Classes="small"/></StackPanel>
+                  <StackPanel Grid.Column="1"><TextBlock Text="{Binding FindingCountText}" FontSize="24" FontWeight="SemiBold" Foreground="#E8B04B"/><TextBlock Text="ITEMS TO REVIEW" Classes="small"/></StackPanel>
+                  <StackPanel Grid.Column="2"><TextBlock Text="{Binding InaccessibleCountText}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="INACCESSIBLE" Classes="small"/></StackPanel>
+                  <StackPanel Grid.Column="3"><TextBlock Text="{Binding DirectoriesCheckedText}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="FOLDERS CHECKED" Classes="small"/></StackPanel>
+                </Grid>
+                <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="7" Padding="10">
+                  <StackPanel Spacing="3">
+                    <TextBlock Text="CURRENT LOCATION" Classes="small" />
+                    <TextBlock Text="{Binding CurrentPath}" FontFamily="monospace" FontSize="11" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding LiveScanMetrics}" Classes="small" />
+                  </StackPanel>
+                </Border>
+                <TextBlock Text="{Binding ScanSummaryText}" Classes="muted" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding LastScanText}" Classes="small" />
+                <StackPanel Spacing="3" IsVisible="{Binding HasScanOutcome}">
+                  <TextBlock Text="AREAS IN THIS SCAN" Classes="small" />
+                  <TextBlock Text="{Binding ScannedAreasDisplay}" FontFamily="monospace" FontSize="10.5" TextWrapping="Wrap" />
+                  <TextBlock Text="CATEGORIES IN THIS SCAN" Classes="small" Margin="0,4,0,0" />
+                  <TextBlock Text="{Binding ScanConfigurationSummary}" Classes="small" TextWrapping="Wrap" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" IsVisible="{Binding HasMinecraftScanData}">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Minecraft JAR review" Classes="h2" />
+                <TextBlock Text="{Binding MinecraftSummaryText}" Classes="muted" />
+                <TextBlock Classes="small" TextWrapping="Wrap" Text="JAR archives are inspected as metadata and entry names only. They are never extracted, executed, decompiled, or uploaded. Unknown mods are not labelled malicious." />
+                <Expander Header="Archives that could not be checked" IsVisible="{Binding HasArchiveIssues}">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ArchiveTruncationNote}" Classes="small" />
+                    <ItemsControl ItemsSource="{Binding ArchiveIssues}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,4">
+                            <StackPanel><TextBlock Text="{Binding Path}" FontFamily="monospace" FontSize="10" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Reason}" Classes="small"/></StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Expander>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel>
+                    <TextBlock Text="Findings" Classes="h2" />
+                    <TextBlock Text="Indicators are shown with their evidence, detection method, and limitations. They are not proof of malware." Classes="small" />
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Close results" Classes="ghost" Command="{Binding CloseResultsCommand}" />
+                </Grid>
+                <ListBox x:Name="FindingsFilterList" Classes="chips" ItemsSource="{Binding FindingFilters}" Background="Transparent" BorderThickness="0" SelectionChanged="FindingsFilter_SelectionChanged">
+                  <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" FontSize="11" /></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="{Binding FindingsEmptyText}" Classes="muted" TextAlignment="Center" Margin="0,14" IsVisible="{Binding !HasVisibleFindings}" />
+                <ListBox ItemsSource="{Binding FilteredFindings}" Background="Transparent" BorderThickness="0" MaxHeight="760" IsVisible="{Binding HasVisibleFindings}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#152026" BorderBrush="#222E37" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,9">
+                        <StackPanel Spacing="6">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <Border Background="#182A2E" BorderBrush="#275854" BorderThickness="1" CornerRadius="5" Padding="7,2"><TextBlock Text="{Binding RiskLabel}" FontSize="10" Foreground="#E8B04B" /></Border>
+                              <Border Background="#172126" BorderBrush="#222E37" BorderThickness="1" CornerRadius="5" Padding="7,2"><TextBlock Text="{Binding ClassificationLabel}" FontSize="10" Foreground="#2FD4C4" /></Border>
+                              <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" Text="{Binding ConfidenceLabel}" Classes="small" VerticalAlignment="Center" />
+                          </Grid>
+                          <TextBlock Text="{Binding FullPath}" FontFamily="monospace" FontSize="10" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding Explanation}" Classes="muted" MaxHeight="52" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding Evidence}" Classes="small" MaxHeight="42" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding DetectionMethod}" Classes="small" MaxHeight="32" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding Limitations}" Classes="small" MaxHeight="46" TextTrimming="CharacterEllipsis" />
+                          <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding SizeText}" Classes="small" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                              <Button Content="View Details" Classes="secondary" Click="ViewDetailsRow_Click" />
+                              <Button Content="Open File Location" Classes="ghost" Click="OpenLocationRow_Click" />
+                            </StackPanel>
+                          </Grid>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="WTX PC CHECK does not run, modify, delete, move, or quarantine files." Classes="small" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <Expander Header="Folders and files that could not be read">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Permissions, locks, sandbox restrictions, long paths, and unavailable mounts can prevent a file from being read." Classes="small" />
+                  <ItemsControl ItemsSource="{Binding InaccessibleAreas}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,4">
+                          <StackPanel><TextBlock Text="{Binding Path}" FontFamily="monospace" FontSize="10" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Reason}" Classes="small"/></StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Expander>
+            </Border>
+
+
+            <Border Classes="card" IsVisible="{Binding IncludeLinuxSecurity}">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel>
+                    <TextBlock Text="Linux security status" Classes="h2" />
+                    <TextBlock Text="{Binding SecurityCheckedText}" Classes="small" />
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Refresh" Classes="secondary" Command="{Binding RefreshSecurityCommand}" />
+                </Grid>
+                <Grid ColumnDefinitions="*,*">
+                  <StackPanel Spacing="3" Margin="0,0,14,0">
+                    <TextBlock Text="DISTRIBUTION" Classes="small" />
+                    <TextBlock Text="{Binding DistributionText}" />
+                    <TextBlock Text="{Binding SupportNote}" Classes="small" TextWrapping="Wrap" />
+                    <TextBlock Text="FIREWALL" Classes="small" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding FirewallStatusText}" />
+                    <TextBlock Text="{Binding FirewallDetailText}" Classes="small" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Spacing="3">
+                    <TextBlock Text="UPDATES" Classes="small" />
+                    <TextBlock Text="{Binding UpdateStatusText}" />
+                    <TextBlock Text="{Binding UpdateDetailText}" Classes="small" TextWrapping="Wrap" />
+                    <TextBlock Text="LOCAL MALWARE SCANNER" Classes="small" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding ClamAvStatusText}" Classes="small" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding ClamProgressText}" Classes="small" Foreground="#2FD4C4" />
+                    <TextBlock Text="{Binding ClamAvResultText}" Classes="small" TextWrapping="Wrap" />
+                    <Button Content="Run ClamAV scan" Classes="secondary" Command="{Binding RunClamAvCommand}" HorizontalAlignment="Left" IsVisible="{Binding ClamAvAvailable}" />
+                  </StackPanel>
+                </Grid>
+                <TextBlock Text="{Binding WindowsEquivalentText}" Classes="small" TextWrapping="Wrap" />
+                <TextBlock Text="No root access is requested. WTX PC CHECK does not install packages, change firewall rules, run system updates, stop processes, or inspect process memory." Classes="small" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" IsVisible="{Binding IncludeLinuxSecurity}">
+              <Expander Header="Running processes (read-only /proc snapshot)">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="{Binding ProcessSummaryText}" Classes="muted" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding ProcessNote}" Classes="small" />
+                  <ListBox ItemsSource="{Binding Processes}" Background="Transparent" BorderThickness="0" MaxHeight="420">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="6" Padding="9" Margin="0,0,0,4">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                              <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Border Background="#182A2E" BorderBrush="#275854" BorderThickness="1" CornerRadius="5" Padding="6,2"><TextBlock Text="{Binding RiskLabel}" FontSize="10" Foreground="#E8B04B" /></Border>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" />
+                                <TextBlock Text="{Binding ProcessId}" Classes="small" VerticalAlignment="Center" />
+                              </StackPanel>
+                              <TextBlock Text="{Binding PathDisplay}" FontFamily="monospace" FontSize="10" TextTrimming="CharacterEllipsis" />
+                              <TextBlock Text="{Binding Explanation}" Classes="small" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Open location" Classes="ghost" VerticalAlignment="Top" Click="OpenProcessLocation_Click" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Expander>
+            </Border>
+
+            <Border Classes="card" IsVisible="{Binding IncludeLinuxSecurity}">
+              <Expander Header="Startup entries (XDG autostart and user systemd)">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="{Binding StartupSummaryText}" Classes="muted" />
+                  <TextBlock Text="Only user-readable XDG autostart and user systemd locations are checked. System-wide services, scheduled tasks, and sandboxed files may not be visible. Nothing is executed or changed." Classes="small" TextWrapping="Wrap" />
+                  <ItemsControl ItemsSource="{Binding StartupEntries}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Background="#121A1F" BorderBrush="#222E37" BorderThickness="1" CornerRadius="6" Padding="9" Margin="0,0,0,4">
+                          <StackPanel Spacing="2">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                              <Border Background="#182A2E" BorderBrush="#275854" BorderThickness="1" CornerRadius="5" Padding="6,2"><TextBlock Text="{Binding RiskLabel}" FontSize="10" Foreground="#E8B04B" /></Border>
+                              <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" />
+                              <TextBlock Text="{Binding Source}" Classes="small" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Command}" FontFamily="monospace" FontSize="10" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding ExecutablePath}" Classes="small" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Explanation}" Classes="small" TextWrapping="Wrap" />
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Expander>
+            </Border>
+          </StackPanel>
+
+          <!-- SETTINGS -->
+          <StackPanel Margin="26,22,26,30" Spacing="14" IsVisible="{Binding IsSettingsPage}">
+            <StackPanel Spacing="3">
+              <TextBlock Text="Settings" Classes="h1" />
+              <TextBlock Text="{Binding CurrentPageSubtitle}" Classes="muted" />
+            </StackPanel>
+
+            <Border Classes="card">
+              <StackPanel Spacing="10">
+                <CheckBox IsChecked="{Binding AutomaticUpdates, Mode=TwoWay}">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="Automatic updates" FontWeight="SemiBold" />
+                    <TextBlock Text="Check on startup and at the selected interval. Verified AppImage updates are downloaded automatically; WTX PC CHECK asks before restarting." Classes="small" TextWrapping="Wrap" />
+                  </StackPanel>
+                </CheckBox>
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                  <RadioButton GroupName="LinuxUpdateInterval" Content="Every hour" IsChecked="{Binding Interval1, Mode=TwoWay}" />
+                  <RadioButton GroupName="LinuxUpdateInterval" Content="Every 6 hours" IsChecked="{Binding Interval6, Mode=TwoWay}" />
+                  <RadioButton GroupName="LinuxUpdateInterval" Content="Every 12 hours" IsChecked="{Binding Interval12, Mode=TwoWay}" />
+                  <RadioButton GroupName="LinuxUpdateInterval" Content="Every 24 hours" IsChecked="{Binding Interval24, Mode=TwoWay}" />
+                </StackPanel>
+                <TextBlock Text="Scanning is never scheduled or started automatically." Classes="small" />
+                <Border Height="1" Background="#222E37" />
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding UpdateStateLabel}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding UpdateMessage}" Classes="muted" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding UpdateVersionText}" Classes="small" />
+                    <TextBlock Text="{Binding InstallKindText}" Classes="small" TextWrapping="Wrap" />
+                    <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Maximum="100" IsVisible="{Binding UpdateProgressVisible}" />
+                    <TextBlock Text="{Binding UpdateProgressText}" Classes="small" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top">
+                    <Button Content="Check now" Classes="secondary" Command="{Binding CheckUpdatesCommand}" />
+                    <Button Content="Restart and install" Classes="primary" Command="{Binding InstallUpdateCommand}" />
+                  </StackPanel>
+                </Grid>
+                <Border Height="1" Background="#222E37" />
+                <TextBlock Text="LINUX UPDATE SOURCE" Classes="small" />
+                <TextBlock Text="{Binding UpdateSourceDisplay}" FontFamily="monospace" FontSize="10.5" TextWrapping="Wrap" />
+                <TextBlock Text="OPENPGP FINGERPRINT PIN" Classes="small" />
+                <TextBlock Text="Configured in LinuxUpdateConfiguration.cs; placeholders are not a real key." Classes="small" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding UpdateConfigurationStatus}" Classes="small" Foreground="#E8B04B" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <CheckBox IsChecked="{Binding ReduceMotion, Mode=TwoWay}">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="Reduce motion" FontWeight="SemiBold" />
+                    <TextBlock Text="Disables the splash ring and any optional motion. Status text, real counts, and scan state remain visible." Classes="small" TextWrapping="Wrap" />
+                  </StackPanel>
+                </CheckBox>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="7">
+                <TextBlock Text="Local preferences and privacy" Classes="h2" />
+                <TextBlock Classes="muted" TextWrapping="Wrap" Text="Only automatic-update choices, interval, reduced-motion choice, and last update-check time are stored. File names, paths, hashes, findings, and reports are never saved by WTX PC CHECK." />
+                <TextBlock Text="{Binding SettingsPathDisplay}" FontFamily="monospace" FontSize="10.5" TextWrapping="Wrap" />
+                <TextBlock Text="No telemetry, analytics, cloud hash lookup, or scan history." Classes="small" />
+                <Button Content="Close current results" Classes="ghost" Command="{Binding CloseResultsCommand}" HorizontalAlignment="Left" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <!-- ABOUT -->
+          <StackPanel Margin="26,22,26,30" Spacing="14" IsVisible="{Binding IsAboutPage}">
+            <StackPanel Spacing="3">
+              <TextBlock Text="About" Classes="h1" />
+              <TextBlock Text="{Binding CurrentPageSubtitle}" Classes="muted" />
+            </StackPanel>
+            <Border Classes="card" Background="#17242A" BorderBrush="#2B4148" Padding="24">
+              <Grid ColumnDefinitions="Auto,*">
+                <Border Width="70" Height="70" CornerRadius="16" Background="#122126" BorderBrush="#2C5A57" BorderThickness="1" Margin="0,0,18,0">
+                  <TextBlock Text="✓" FontSize="34" Foreground="#2FD4C4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                  <TextBlock Text="WTX PC CHECK" FontSize="29" FontWeight="SemiBold" Foreground="#2FD4C4" />
+                  <TextBlock Text="Made by WERTIX" FontSize="16" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding VersionText}" Classes="small" />
+                  <TextBlock Text="Defensive local PC check for Linux x64. Windows 10 22H2 and Windows 11 remain available as the original WTX-PC-CHECK.exe build." Classes="small" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding PlatformText}" Classes="small" />
+                </StackPanel>
+              </Grid>
+            </Border>
+            <Grid ColumnDefinitions="*,14,*">
+              <Border Classes="card" Grid.Column="0">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Purpose and privacy" Classes="h2" />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="WTX PC CHECK helps reviewers look for potential Roblox executors, Minecraft cheat clients, and signs of malware, including trojans, in selected local locations. It supports a safer, fairer gaming community." />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="Files, names, paths, hashes, contents, and results are never uploaded by the app. Results exist in memory until closed or the app exits. No telemetry, analytics, crash reports, cloud analysis, or scan history." />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="Only update preferences and the last update-check time are stored locally. The Linux updater contacts a configured HTTPS source only when enabled and never sends scan data." />
+                </StackPanel>
+              </Border>
+              <Border Classes="card" Grid.Column="2">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Linux support" Classes="h2" />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="Explicit targets: Bazzite and Kali Linux x64. Best-effort support is provided for other mainstream Linux distributions; every distribution is not claimed as verified." />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="Portable AppImage and .tar.gz are recommended for Bazzite. The .deb package targets Kali and compatible Debian systems. No rpm-ostree layering is required." />
+                  <TextBlock Classes="muted" TextWrapping="Wrap" Text="X11 and Wayland are supported where Avalonia and the desktop environment permit. Some sandboxed installs may restrict visible files or processes; missing tools such as ClamAV, ufw, or firewalld are reported instead of invented." />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Border Classes="card">
+              <StackPanel Spacing="5">
+                <TextBlock Text="Detection limits" Classes="h2" />
+                <TextBlock Classes="muted" TextWrapping="Wrap" Text="Name, folder, signature, hash, and JAR metadata matches are explainable indicators, not proof. Executors and cheat clients can be renamed, obfuscated, packed, or missed. ClamAV results are Microsoft-independent local signature results and may be false positives. Linux ELF publisher signatures are not verified by this build. Files locked by permissions, sandboxes, or other users may not be readable. A clean result never guarantees a clean PC." />
+                <TextBlock Classes="muted" TextWrapping="Wrap" Text="WTX PC CHECK does not execute, modify, delete, move, or quarantine files. It does not inspect process memory, inject code, stop processes, install packages, change firewall rules, or run system updates." />
+              </StackPanel>
+            </Border>
+            <Border Classes="card">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Updater configuration" Classes="h2" />
+                <TextBlock Text="{Binding UpdateConfigurationStatus}" Classes="small" Foreground="#E8B04B" TextWrapping="Wrap" />
+                <TextBlock Classes="muted" TextWrapping="Wrap" Text="No real Linux update URL, OpenPGP public key, or signing key is bundled. The Linux updater remains disabled while the placeholders in LinuxUpdateConfiguration.cs remain. Package-managed and archive installations are never silently replaced; only a user-owned AppImage can be updated after OpenPGP verification." />
+                <Button Content="Open app location" Classes="ghost" Command="{Binding OpenAppImageFolderCommand}" HorizontalAlignment="Left" />
+              </StackPanel>
+            </Border>
+            <TextBlock Text="WTX PC CHECK · Made by WERTIX · No telemetry · No scan history · For defensive review only." Classes="small" HorizontalAlignment="Center" TextAlignment="Center" />
+          </StackPanel>
+          </Grid>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+  </Grid>
+</Window>
+
+

@@ -1,0 +1,42 @@
+﻿<Window x:Class="WtxPcCheck.Linux.Views.PrivacyDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Privacy &amp; Purpose"
+        Width="760" Height="650" MinWidth="620" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="#0F1418" Foreground="#EDF5F7">
+  <Border Background="#131A1F" BorderBrush="#2A3742" BorderThickness="1" CornerRadius="10" Margin="12">
+    <Grid Margin="28" RowDefinitions="Auto,*,Auto">
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+        <Border Width="38" Height="38" CornerRadius="9" Background="#172B2E" BorderBrush="#275854" BorderThickness="1">
+          <TextBlock Text="✓" FontSize="22" Foreground="#2FD4C4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="Privacy &amp; Purpose" FontSize="21" FontWeight="SemiBold" />
+          <TextBlock Text="WTX PC CHECK · Made by WERTIX" Classes="small" />
+        </StackPanel>
+      </StackPanel>
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="14" Margin="0,0,8,0">
+          <TextBlock Text="Before every scan" Foreground="#2FD4C4" FontWeight="SemiBold" />
+          <TextBlock TextWrapping="Wrap" Classes="muted" Text="WTX PC CHECK scans the locations you select for potential Roblox executors, Minecraft cheat clients, and signs of malware, including trojans. It is designed to help support a safer, fairer community. It is a defensive PC-check tool, not a cheat, executor, injector, or malware." />
+          <TextBlock TextWrapping="Wrap" Classes="muted" Text="WTX PC CHECK does not upload or share your files, file names, paths, file contents, hashes, or scan results. Scanning is performed on this PC. Results remain visible in the app until you close them, then they are discarded. WTX PC CHECK does not keep scan history or collect telemetry, analytics, or crash reports." />
+          <TextBlock TextWrapping="Wrap" Classes="muted" Text="The automatic updater may contact the configured update server to check for and download signed app updates. This may reveal standard connection information, such as your IP address and app version, but it does not send scan data. Windows or Windows Defender may keep its own local security history according to your Windows settings." />
+          <TextBlock TextWrapping="Wrap" Classes="muted" Text="Detection is not perfect. Some threats may be missed, and legitimate files may sometimes be flagged." />
+          <Border Classes="card" Padding="14" Background="#121A1F">
+            <StackPanel Spacing="5">
+              <TextBlock Text="Scope and limits" FontWeight="SemiBold" />
+              <TextBlock TextWrapping="Wrap" Classes="small" Text="The scan is local and read-only. It does not execute, modify, delete, move, or quarantine files. It cannot guarantee that the PC is clean. Files locked by the system, protected by permissions, unavailable in a sandbox, or outside the selected locations may not be checked." />
+            </StackPanel>
+          </Border>
+          <CheckBox x:Name="ConfirmBox" Content="I understand and want to scan this PC" FontWeight="SemiBold" />
+        </StackPanel>
+      </ScrollViewer>
+      <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,20,0,0">
+        <TextBlock Text="Start Scan stays disabled until the confirmation box is checked." Classes="small" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Content="Cancel" Classes="secondary" Margin="0,0,10,0" Click="Cancel_Click" />
+        <Button Grid.Column="2" x:Name="StartScanButton" Content="Start Scan" Classes="primary" IsEnabled="False" Click="StartScan_Click" />
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

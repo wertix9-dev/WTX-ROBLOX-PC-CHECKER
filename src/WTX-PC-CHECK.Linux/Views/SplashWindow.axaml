@@ -1,0 +1,37 @@
+﻿<Window x:Class="WtxPcCheck.Linux.Views.SplashWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WTX PC CHECK" Width="620" Height="390"
+        CanResize="False" SystemDecorations="BorderOnly" ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        Background="#0F1418" Foreground="#EDF5F7">
+  <Border Background="#131A1F" BorderBrush="#2A3742" BorderThickness="1" CornerRadius="12" Margin="10">
+    <Grid Margin="38,30,38,26" RowDefinitions="*,Auto,Auto">
+      <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="30">
+        <Grid Width="170" Height="170">
+          <Ellipse Width="170" Height="170" Stroke="#22313A" StrokeThickness="7" />
+          <Ellipse x:Name="OuterArc" Width="170" Height="170" Stroke="#2FD4C4" StrokeThickness="7" StrokeDashArray="42,130" RenderTransformOrigin="0.5,0.5">
+            <Ellipse.RenderTransform><RotateTransform Angle="0" /></Ellipse.RenderTransform>
+          </Ellipse>
+          <Ellipse x:Name="InnerArc" Width="138" Height="138" Stroke="#A6E22E" StrokeThickness="2" StrokeDashArray="18,110" Opacity="0.6" RenderTransformOrigin="0.5,0.5">
+            <Ellipse.RenderTransform><RotateTransform Angle="120" /></Ellipse.RenderTransform>
+          </Ellipse>
+          <Border Width="88" Height="88" CornerRadius="20" Background="#122126" BorderBrush="#2C5A57" BorderThickness="1">
+            <TextBlock Text="✓" FontSize="44" Foreground="#2FD4C4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+        </Grid>
+        <StackPanel Width="320" VerticalAlignment="Center" Spacing="4">
+          <TextBlock Text="WTX PC CHECK" FontSize="36" FontWeight="SemiBold" Foreground="#2FD4C4" TextWrapping="Wrap" />
+          <TextBlock Text="Made by WERTIX" FontSize="16" FontWeight="SemiBold" />
+          <TextBlock Text="Defensive PC check · Local scan · No telemetry" Classes="small" Margin="0,8,0,0" />
+          <Border Height="2" Width="52" Background="#2FD4C4" HorizontalAlignment="Left" Margin="0,12,0,8" />
+          <TextBlock x:Name="StatusText" Text="Starting..." FontSize="13" Foreground="#A8B8BF" TextWrapping="Wrap" />
+          <TextBlock x:Name="DetailText" Text="Preparing the local app. No scan starts automatically." Classes="small" />
+        </StackPanel>
+      </StackPanel>
+      <TextBlock Grid.Row="1" Text="Privacy first: settings are loaded locally, and scan results are never saved." Classes="small" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,10,0,0" />
+      <TextBlock Grid.Row="2" Text="Linux x64 · Bazzite / Kali target · Windows build unchanged" Classes="small" HorizontalAlignment="Center" Margin="0,6,0,0" />
+    </Grid>
+  </Border>
+</Window>
+

@@ -1,0 +1,77 @@
+﻿<Window x:Class="WtxPcCheck.Linux.Views.FindingDetailsWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WTX PC CHECK · Finding details" Width="840" Height="740" MinWidth="680" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="#0F1418" Foreground="#EDF5F7">
+  <Border Background="#131A1F" BorderBrush="#2A3742" BorderThickness="1" CornerRadius="10" Margin="12">
+    <Grid Margin="24" RowDefinitions="Auto,*,Auto">
+      <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,12">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="✓" Foreground="#2FD4C4" FontSize="22" />
+          <StackPanel>
+            <TextBlock Text="Finding details" FontSize="20" FontWeight="SemiBold" />
+            <TextBlock Text="WTX PC CHECK · Made by WERTIX" Classes="small" />
+          </StackPanel>
+        </StackPanel>
+        <TextBlock Text="{Binding FileName}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBox Text="{Binding FullPath}" IsReadOnly="True" Background="Transparent" BorderThickness="0" Padding="0" FontFamily="monospace" FontSize="11" TextWrapping="Wrap" />
+        <WrapPanel>
+          <Border Classes="card" Padding="8,3" Margin="0,0,7,7"><TextBlock Text="{Binding RiskLabel}" Foreground="#E8B04B" FontWeight="SemiBold" /></Border>
+          <Border Classes="card" Padding="8,3" Margin="0,0,7,7"><TextBlock Text="{Binding ClassificationLabel}" Foreground="#2FD4C4" /></Border>
+          <Border Classes="card" Padding="8,3" Margin="0,0,7,7"><TextBlock Text="{Binding ConfidenceLabel}" Classes="small" /></Border>
+          <Border Classes="card" Padding="8,3" Margin="0,0,7,7"><TextBlock Text="{Binding CategoryLabel}" Classes="small" /></Border>
+        </WrapPanel>
+      </StackPanel>
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,*,*">
+            <StackPanel><TextBlock Text="FILE SIZE" Classes="small"/><TextBlock Text="{Binding SizeText}"/></StackPanel>
+            <StackPanel Grid.Column="1"><TextBlock Text="MODIFIED" Classes="small"/><TextBlock Text="{Binding ModifiedText}"/></StackPanel>
+            <StackPanel Grid.Column="2"><TextBlock Text="MATCHED RULE" Classes="small"/><TextBlock Text="{Binding MatchedRule}" TextWrapping="Wrap"/></StackPanel>
+          </Grid>
+          <Border Classes="card" Padding="14">
+            <StackPanel Spacing="5">
+              <TextBlock Text="Review, do not assume" FontWeight="SemiBold" Foreground="#E8B04B" />
+              <TextBlock Classes="small" TextWrapping="Wrap" Text="This is a local indicator, not proof of malware. WTX PC CHECK did not execute, change, delete, move, or quarantine this file. Verify the publisher and the detection limits before deciding what to do." />
+            </StackPanel>
+          </Border>
+          <TextBlock Text="Why it was flagged" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding Explanation}" Classes="muted" />
+          <TextBlock Text="Evidence" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding Evidence}" Classes="muted" />
+          <TextBlock Text="Detection method" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding DetectionMethod}" Classes="muted" />
+          <TextBlock Text="Limitations" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding Limitations}" Classes="muted" />
+          <TextBlock Text="SHA-256" FontWeight="SemiBold" />
+          <TextBox Text="{Binding Sha256, Mode=OneWay}" IsReadOnly="True" FontFamily="monospace" FontSize="11" TextWrapping="Wrap" MinHeight="48" />
+          <TextBlock Text="{Binding HashNote}" Classes="small" />
+          <TextBlock Text="Digital signature" FontWeight="SemiBold" />
+          <Border Classes="card" Padding="12">
+            <StackPanel Spacing="3">
+              <TextBlock Text="{Binding Signature.StatusText}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Signature.PublisherDisplay}" Classes="small" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding Signature.Detail}" Classes="small" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding Signature.ThumbprintSha256}" Classes="small" FontFamily="monospace" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+          <StackPanel IsVisible="{Binding IsScriptFile}" Spacing="8">
+            <TextBlock Text="Safe script preview" FontWeight="SemiBold" />
+            <TextBlock Classes="small" TextWrapping="Wrap" Text="The script is shown as read-only static text. WTX PC CHECK never executes a discovered script. Opening or running it yourself can be dangerous." />
+            <CheckBox x:Name="PreviewConfirm" Content="I understand and want to view the script as static text" />
+            <Button x:Name="LoadPreviewButton" Content="Load safe text preview" Classes="secondary" IsEnabled="False" Click="LoadPreview_Click" />
+            <TextBlock x:Name="PreviewNote" Classes="small" />
+            <TextBox x:Name="PreviewBox" IsReadOnly="True" FontFamily="monospace" FontSize="11" Height="220" IsVisible="False" TextWrapping="NoWrap" AcceptsReturn="True" />
+          </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
+      <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,14,0,0">
+        <TextBlock Classes="small" Text="No action is taken on the file by this app." VerticalAlignment="Center" />
+        <Button Grid.Column="1" Content="Open File Location" Classes="secondary" Margin="0,0,8,0" Click="OpenLocation_Click" />
+        <Button Grid.Column="2" Content="Close" Classes="primary" Click="Close_Click" />
+      </Grid>
+    </Grid>
+  </Border>
+</Window>
+

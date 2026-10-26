@@ -9,3 +9,7 @@ selftest.txt
 # OS files
 Thumbs.db
 Desktop.ini
+
+# Generated Linux packaging artifacts
+publish/linux/
+
