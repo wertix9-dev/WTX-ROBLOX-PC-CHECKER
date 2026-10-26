@@ -110,6 +110,21 @@ jobs:
 
           ls -lh publish/linux/*.AppImage publish/linux/*.tar.gz publish/linux/*.deb
 
+      - name: Smoke-test AppImage and .deb on Linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y xvfb libx11-6 libice6 libsm6 libfontconfig1 libfreetype6 libharfbuzz0b libxcb1 libxkbcommon0 libxrandr2 libxi6 libgl1
+          APP="publish/linux/WTX-PC-CHECK-1.2.0-x86_64.AppImage"
+          chmod +x "$APP"
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export XDG_RUNTIME_DIR="$(mktemp -d)"
+          xvfb-run -a bash -c '"$0" & pid=$!; sleep 12; if ! kill -0 $pid 2>/dev/null; then echo "AppImage app exited during startup"; exit 1; fi; kill $pid 2>/dev/null || true' "$PWD/$APP"
+          sudo apt-get install -y "./publish/linux/wtx-pc-check_1.2.0_amd64.deb"
+          test -x /opt/wtx-pc-check/WTX-PC-CHECK
+          xvfb-run -a bash -c '/opt/wtx-pc-check/WTX-PC-CHECK & pid=$!; sleep 10; if ! kill -0 $pid 2>/dev/null; then echo ".deb app exited during startup"; exit 1; fi; kill $pid 2>/dev/null || true'
+          echo "Linux GUI startup smoke tests passed"
       - name: Upload Linux packages
         uses: actions/upload-artifact@v4
         with:
@@ -120,5 +135,6 @@ jobs:
             publish/linux/wtx-pc-check_1.2.0_amd64.deb
             publish/linux/linux-selftest.txt
           if-no-files-found: error
+
 
 

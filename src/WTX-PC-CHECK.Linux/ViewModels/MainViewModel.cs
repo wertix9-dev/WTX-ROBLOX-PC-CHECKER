@@ -66,7 +66,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private long _hashChecksPerformed;
     private long _signatureChecksPerformed;
     private long _reparsePointsSkipped;
-    private long _cloudFilesSkipped;
     private string _clamProgressText = string.Empty;
     private string _noticeText = string.Empty;
     private bool _hasNotice;
@@ -626,7 +625,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _hashChecksPerformed = 0;
         _signatureChecksPerformed = 0;
         _reparsePointsSkipped = 0;
-        _cloudFilesSkipped = 0;
         _findingLimitReached = false;
         ArchiveIssues.Clear();
         InaccessibleAreas.Clear();
@@ -784,7 +782,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _hashChecksPerformed = 0;
         _signatureChecksPerformed = 0;
         _reparsePointsSkipped = 0;
-        _cloudFilesSkipped = 0;
         FilesChecked = 0;
         _directoriesChecked = 0;
         InaccessibleCount = 0;
