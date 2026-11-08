@@ -7,6 +7,8 @@
 # WTX PC CHECK
 
 **Made by WERTIX**
+[![Download Windows EXE](https://img.shields.io/badge/Download-Windows%20EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/download/v1.2.0/WTX-PC-CHECK.exe)
+[![Download Linux AppImage](https://img.shields.io/badge/Download-Linux%20AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=111111)](https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/download/v1.2.0/WTX-PC-CHECK-1.2.0-x86_64.AppImage)
 
 WTX PC CHECK is a defensive, local PC-check application for Windows 10 version 22H2, Windows 11, and Linux x64 (Bazzite/Kali targets, best-effort elsewhere). It helps users review selected locations for Roblox executor indicators, Minecraft cheat-client indicators and mods, and signs of malware, including trojans. It is built to support a safer, fairer gaming community.
 
@@ -121,7 +123,9 @@ The AppDir/AppImage/deb steps are in the workflow. See [README-Linux.md](README-
 
 ## Navigation and start-up
 
-- Animated start-up screen with **WTX PC CHECK**, **Made by WERTIX**, a lightweight scan ring, and real English status messages such as **Loading settings...** and **Checking for updates...**.
+- Animated start-up screen with **WTX PC CHECK**, **Made by WERTIX**
+[![Download Windows EXE](https://img.shields.io/badge/Download-Windows%20EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/download/v1.2.0/WTX-PC-CHECK.exe)
+[![Download Linux AppImage](https://img.shields.io/badge/Download-Linux%20AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=111111)](https://github.com/wertix9-dev/WTX-ROBLOX-PC-CHECKER/releases/download/v1.2.0/WTX-PC-CHECK-1.2.0-x86_64.AppImage), a lightweight scan ring, and real English status messages such as **Loading settings...** and **Checking for updates...**.
 - No fake percentages and no artificial delay. The splash closes as soon as settings and the optional update check are ready. Failures are explained and the app continues offline.
 - Left navigation rail: **Dashboard**, **Roblox PC Check**, **Minecraft PC Check**, **Full PC Check**, **Settings**, **About**.
 - The About page repeats the branding, version, privacy, purpose, detection limits, and update configuration placeholders.
@@ -337,6 +341,7 @@ Linux packages were built on Ubuntu 24.04 in GitHub Actions and the AppImage and
 ## Attribution
 
 Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET, WPF, and Avalonia runtimes.
+
 
 
 
