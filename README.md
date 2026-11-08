@@ -30,6 +30,10 @@ Real application captures from the delivered builds. Windows previews come from 
 |---|---|
 | ![Windows privacy confirmation](docs/previews/windows-privacy.png) | ![Linux dashboard](docs/previews/linux-dashboard.png) |
 
+**Linux scan setup (Avalonia, captured from the AppImage under X11):**
+
+![Linux scan setup](docs/previews/linux-scan.png)
+
 ### Languages and platform
 
 | Area | Language / framework |
@@ -341,6 +345,7 @@ Linux packages were built on Ubuntu 24.04 in GitHub Actions and the AppImage and
 ## Attribution
 
 Made by WERTIX. (c) 2026 WERTIX. No third-party packages beyond the .NET, WPF, and Avalonia runtimes.
+
 
 
 

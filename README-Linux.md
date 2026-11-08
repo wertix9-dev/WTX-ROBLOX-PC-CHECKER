@@ -4,6 +4,8 @@
 
 ![Linux dashboard preview](docs/previews/linux-dashboard.png)
 
+![Linux scan page preview](docs/previews/linux-scan.png)
+
 WTX PC CHECK is a local, defensive PC checker for Linux x64. It keeps the existing Roblox and Minecraft scan categories and adds Linux-native, read-only security checks. The Windows build remains available as `WTX-PC-CHECK.exe`.
 
 ## Download and run
@@ -126,5 +128,6 @@ Self-test:
 ```bash
 ./publish/linux/app/WTX-PC-CHECK --self-test ./linux-selftest.txt
 ```
+
 
 
