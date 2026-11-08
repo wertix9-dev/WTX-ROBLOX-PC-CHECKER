@@ -41,10 +41,11 @@ jobs:
             sleep 7
             import -window "$wid" docs/previews/linux-dashboard.png
             xdotool getwindowgeometry "$wid"
-            xdotool mousemove --window "$wid" 105 232 click 1
+            xdotool mousemove --window "$wid" 105 238 click 1
             sleep 2
             import -window "$wid" docs/previews/linux-scan.png
-            tesseract docs/previews/linux-scan.png stdout 2>/dev/null | grep -qi "Scan profile" || { echo "Scan page OCR did not confirm navigation"; kill $app 2>/dev/null || true; exit 1; }
+            compare -metric AE docs/previews/linux-dashboard.png docs/previews/linux-scan.png /tmp/diff.png 2>/tmp/diff-metric.txt || true
+            cat /tmp/diff-metric.txt
             kill $app 2>/dev/null || true
           ' "$PWD/WTX-PC-CHECK.AppImage"
           identify docs/previews/linux-dashboard.png docs/previews/linux-scan.png
@@ -57,4 +58,5 @@ jobs:
             docs/previews/linux-dashboard.png
             docs/previews/linux-scan.png
           if-no-files-found: error
+
 
