@@ -13,7 +13,7 @@ jobs:
       - name: Install screenshot tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb xdotool imagemagick x11-apps curl
+          sudo apt-get install -y xvfb xdotool imagemagick x11-apps curl tesseract-ocr
 
       - name: Download release AppImage
         run: |
@@ -41,13 +41,20 @@ jobs:
             sleep 7
             import -window "$wid" docs/previews/linux-dashboard.png
             xdotool getwindowgeometry "$wid"
+            xdotool mousemove --window "$wid" 105 232 click 1
+            sleep 2
+            import -window "$wid" docs/previews/linux-scan.png
+            tesseract docs/previews/linux-scan.png stdout 2>/dev/null | grep -qi "Scan profile" || { echo "Scan page OCR did not confirm navigation"; kill $app 2>/dev/null || true; exit 1; }
             kill $app 2>/dev/null || true
           ' "$PWD/WTX-PC-CHECK.AppImage"
-          identify docs/previews/linux-dashboard.png
+          identify docs/previews/linux-dashboard.png docs/previews/linux-scan.png
 
       - name: Upload preview
         uses: actions/upload-artifact@v4
         with:
           name: wtx-linux-preview
-          path: docs/previews/linux-dashboard.png
+          path: |
+            docs/previews/linux-dashboard.png
+            docs/previews/linux-scan.png
           if-no-files-found: error
+
